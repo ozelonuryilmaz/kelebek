@@ -40,3 +40,16 @@ playground.xcworkspace
 .build/
 .swiftpm/
 Package.resolved
+
+# Accio dependency management
+Dependencies/
+.accio/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Code Injection
+iOSInjectionProject/
