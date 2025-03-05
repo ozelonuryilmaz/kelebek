@@ -21,23 +21,18 @@ protocol ILocationUseCase {
 
 final class LocationUseCase: ILocationUseCase {
     
-    private let locationService: ILocationManager
+    private let locationManager: ILocationManager
     private let coreDataManager: ICoreDataManager
     private var cancellables = Set<AnyCancellable>()
-    private var lastLocation: CLLocation? = nil
     
     internal var locationPublisher: LocationPublisher {
-        return locationService.locationPublisher
+        return locationManager.locationPublisher
     }
     
-    init(locationService: ILocationManager,
-         coreDataManager: ICoreDataManager,
-         cancellables: Set<AnyCancellable> = Set<AnyCancellable>(),
-         lastLocation: CLLocation? = nil) {
-        self.locationService = locationService
+    init(locationManager: ILocationManager,
+         coreDataManager: ICoreDataManager) {
+        self.locationManager = locationManager
         self.coreDataManager = coreDataManager
-        self.cancellables = cancellables
-        self.lastLocation = lastLocation
         
         setupBindings()
     }
@@ -46,7 +41,6 @@ final class LocationUseCase: ILocationUseCase {
         locationPublisher
             .receive(on: DispatchQueue.global(qos: .background))
             .sink { [weak self] location in
-                self?.lastLocation = location
                 self?.saveLocation(location)
             }
             .store(in: &cancellables)
@@ -57,15 +51,15 @@ final class LocationUseCase: ILocationUseCase {
 extension LocationUseCase {
     
     func requestLocationPermission() {
-        locationService.requestPermission()
+        locationManager.requestPermission()
     }
     
     func startTracking() {
-        locationService.startUpdatingLocation()
+        locationManager.startUpdatingLocation()
     }
     
     func stopTracking() {
-        locationService.stopUpdatingLocation()
+        locationManager.stopUpdatingLocation()
     }
 }
 

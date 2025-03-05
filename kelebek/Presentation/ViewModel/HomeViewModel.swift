@@ -9,9 +9,12 @@ import Foundation
 import CoreLocation
 import Combine
 
+typealias CurrentLocationSubject = PassthroughSubject<CLLocation?, Never>
+typealias IsTrackingActiveSubject = PassthroughSubject<Bool, Never>
+
 protocol IHomeViewModel {
-    var currentLocation: CLLocation? { get }
-    var isTrackingActive: Bool { get set }
+    var currentLocationSubject: CurrentLocationSubject { get }
+    var isTrackingActiveSubject: IsTrackingActiveSubject { get }
     
     func requestLocationPermission()
     func startTracking()
@@ -24,29 +27,34 @@ final class HomeViewModel: IHomeViewModel {
     private let locationUseCase: ILocationUseCase
     private var cancellables = Set<AnyCancellable>()
     
-    @Published private(set) var currentLocation: CLLocation?
-    @Published var isTrackingActive: Bool = false
-    
+    private(set) var currentLocationSubject = CurrentLocationSubject()
+    private(set) var isTrackingActiveSubject = IsTrackingActiveSubject()
+
     init(locationUseCase: ILocationUseCase) {
         self.locationUseCase = locationUseCase
+
         loadLastSavedLocation()
-        setupBindings()
+        observeLocation()
     }
     
     private func loadLastSavedLocation() {
         if let savedLocation = locationUseCase.getLastSavedLocation() {
-            currentLocation = savedLocation
+            currentLocationSubject.send(savedLocation)
         }
     }
     
-    private func setupBindings() {
+    private func observeLocation() {
         locationUseCase.locationPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] location in
-                self?.currentLocation = location
+                self?.currentLocationSubject.send(location)
             }
             .store(in: &cancellables)
     }
+}
+
+// MARK: LocationUseCase
+extension HomeViewModel {
     
     func requestLocationPermission() {
         locationUseCase.requestLocationPermission()
@@ -54,16 +62,16 @@ final class HomeViewModel: IHomeViewModel {
     
     func startTracking() {
         locationUseCase.startTracking()
-        isTrackingActive = true
+        isTrackingActiveSubject.send(true)
     }
     
     func stopTracking() {
         locationUseCase.stopTracking()
-        isTrackingActive = false
+        isTrackingActiveSubject.send(false)
     }
     
     func resetRoute() {
         locationUseCase.clearAllLocations()
-        currentLocation = nil
+        currentLocationSubject.send(nil)
     }
 }
