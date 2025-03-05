@@ -7,6 +7,10 @@
 
 import Foundation
 
-final class CoreDataManager {
+protocol ICoreDataManager {
+    
+}
+
+final class CoreDataManager: ICoreDataManager {
     
 }

@@ -22,7 +22,7 @@ protocol ILocationUseCase {
 final class LocationUseCase: ILocationUseCase {
     
     private let locationService: ILocationManager
-    private let coreDataManager: CoreDataManager
+    private let coreDataManager: ICoreDataManager
     private var cancellables = Set<AnyCancellable>()
     private var lastLocation: CLLocation? = nil
     
@@ -31,7 +31,7 @@ final class LocationUseCase: ILocationUseCase {
     }
     
     init(locationService: ILocationManager,
-         coreDataManager: CoreDataManager,
+         coreDataManager: ICoreDataManager,
          cancellables: Set<AnyCancellable> = Set<AnyCancellable>(),
          lastLocation: CLLocation? = nil) {
         self.locationService = locationService
