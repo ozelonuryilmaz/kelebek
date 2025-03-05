@@ -13,7 +13,7 @@ enum HomeViewBuilder {
         
         let locationManager = LocationManager()
         
-        let managedContext = CoreDataHelper.shared.getCoreDataManagedContextWithMergePolicy()
+        let managedContext = CoreDataHelper.shared.getManagedContextWithMergePolicy()
         let locationEntityCoreDataManager = LocationEntityCoreDataManager(managedContext: managedContext)
 
         let locationUseCase = LocationUseCase(locationManager: locationManager,

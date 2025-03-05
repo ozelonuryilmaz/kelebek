@@ -44,6 +44,6 @@ class LocationEntityCoreDataManager: BaseCoreDataManager<LocationEntity>, ILocat
     
     @discardableResult
     func clearAllLocationEntity() -> Bool {
-        return deleteAllObjectWithBatchRequest()
+        return deleteAllObjectsWithBatchRequest()
     }
 }

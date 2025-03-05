@@ -5,90 +5,88 @@
 //  Created by Onur Yılmaz on 4.03.2025.
 //
 
-import Foundation
 import CoreData
-import UIKit
 
 class BaseCoreDataManager<T: NSManagedObject> {
-
+    
     internal let managedContext: NSManagedObjectContext
 
     internal var entityName: String {
-        return "\(T.self)"
+        return String(describing: T.self)
     }
 
     init(managedContext: NSManagedObjectContext) {
         self.managedContext = managedContext
     }
 
+    // MARK: - Fetch All Objects
     @discardableResult
     internal func getAllObjects(with predicate: NSPredicate? = nil, sortDescriptors: [NSSortDescriptor]? = nil) -> [T]? {
-        let fetchRequest = NSFetchRequest<T>(entityName: entityName)
-        if let predicate = predicate {
-            fetchRequest.predicate = predicate
-        }
-        if let sortDescriptors = sortDescriptors {
-            fetchRequest.sortDescriptors = sortDescriptors
-        }
+        let fetchRequest: NSFetchRequest<T> = NSFetchRequest(entityName: entityName)
+        fetchRequest.predicate = predicate
+        fetchRequest.sortDescriptors = sortDescriptors
+
         do {
             return try managedContext.fetch(fetchRequest)
         } catch {
+            print("Fetch error: \(error.localizedDescription)")
             return nil
         }
     }
 
+    // MARK: - Delete Objects with Predicate
     @discardableResult
-    internal func deleteObjects(predicate: NSPredicate) -> Bool {
-        let fetchRequest = NSFetchRequest<T>(entityName: entityName)
-        fetchRequest.predicate = predicate
-
-        do {
-            let tasks = try managedContext.fetch(fetchRequest)
-
-            for task in tasks {
-                managedContext.delete(task)
-            }
-            return saveContext()
-        } catch {
-            return false
-        }
+    internal func deleteObjects(with predicate: NSPredicate) -> Bool {
+        return performDelete(fetchRequest: NSFetchRequest(entityName: entityName), predicate: predicate)
     }
 
+    // MARK: - Delete All Objects
     @discardableResult
-    internal func deleteAllObject() -> Bool {
-        let fetchRequest = NSFetchRequest<T>(entityName: entityName)
-        do {
-            let tasks = try managedContext.fetch(fetchRequest)
-            for task in tasks {
-                managedContext.delete(task)
-            }
-            return saveContext()
-        } catch {
-            return false
-        }
+    internal func deleteAllObjects() -> Bool {
+        return performDelete(fetchRequest: NSFetchRequest(entityName: entityName), predicate: nil)
     }
 
+    // MARK: - Delete All Using Batch Request
     @discardableResult
-    internal func deleteAllObjectWithBatchRequest() -> Bool {
+    internal func deleteAllObjectsWithBatchRequest() -> Bool {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
         let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+        
         do {
             try managedContext.execute(deleteRequest)
             try managedContext.save()
             return true
         } catch {
+            print("Batch delete error: \(error.localizedDescription)")
             return false
         }
     }
 
+    // MARK: - Save Context
     @discardableResult
     internal func saveContext() -> Bool {
+        guard managedContext.hasChanges else { return true }
+
         do {
             try managedContext.save()
             return true
         } catch {
+            print("Save context error: \(error.localizedDescription)")
             return false
         }
     }
 
+    // MARK: - Helper Delete Function
+    private func performDelete(fetchRequest: NSFetchRequest<T>, predicate: NSPredicate?) -> Bool {
+        fetchRequest.predicate = predicate
+
+        do {
+            let objects = try managedContext.fetch(fetchRequest)
+            objects.forEach { managedContext.delete($0) }
+            return saveContext()
+        } catch {
+            print("Delete error: \(error.localizedDescription)")
+            return false
+        }
+    }
 }

@@ -10,38 +10,41 @@ import CoreData
 
 final class CoreDataHelper {
 
-    static let shared = CoreDataHelper()
-
+    static let shared = CoreDataHelper() // Opsiyonel: Test için bağımsız hale getirebiliriz.
+    
     private init() { }
-
+    
     lazy var persistentContainer: NSPersistentContainer = {
         let container = NSPersistentContainer(name: "Kelebekapp")
-        container.loadPersistentStores(completionHandler: { (storeDescription, error) in
+        container.loadPersistentStores { storeDescription, error in
             if let error = error as NSError? {
-                fatalError("Unresolved error \(error), \(error.userInfo)")
+                print("Core Data yüklenirken hata oluştu: \(error.localizedDescription)")
             }
-        })
+        }
         return container
     }()
 
-    func saveContext () {
-        let context = CoreDataHelper.shared.persistentContainer.viewContext
-        if context.hasChanges {
-            do {
-                try context.save()
-            } catch {
-                let nserror = error as NSError
-                fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
-            }
+    var viewContext: NSManagedObjectContext {
+        return persistentContainer.viewContext
+    }
+
+    func saveContext() {
+        let context = viewContext
+        guard context.hasChanges else { return }
+
+        do {
+            try context.save()
+        } catch {
+            print("Core Data kaydetme hatası: \(error.localizedDescription)")
         }
     }
 }
 
+// MARK: - Managed Context with Merge Policy
 extension CoreDataHelper {
-
-    func getCoreDataManagedContextWithMergePolicy() -> NSManagedObjectContext {
-        let managedContext = CoreDataHelper.shared.persistentContainer.viewContext
-        managedContext.mergePolicy = NSMergePolicy(merge: NSMergePolicyType.mergeByPropertyObjectTrumpMergePolicyType)
-        return managedContext
+    func getManagedContextWithMergePolicy() -> NSManagedObjectContext {
+        let context = persistentContainer.viewContext
+        context.mergePolicy = NSMergePolicy(merge: .mergeByPropertyObjectTrumpMergePolicyType)
+        return context
     }
 }
