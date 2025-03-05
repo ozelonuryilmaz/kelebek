@@ -26,7 +26,7 @@ final class LocationManager: NSObject, ILocationManager {
     private var backgroundTaskID: UIBackgroundTaskIdentifier = UIBackgroundTaskIdentifier.invalid
     private var lastSentLocation: CLLocation? = nil
     
-    var locationPublisher: LocationPublisher {
+    internal var locationPublisher: LocationPublisher {
         locationSubject.eraseToAnyPublisher()
     }
     
@@ -35,14 +35,18 @@ final class LocationManager: NSObject, ILocationManager {
         self.initLocationManager()
     }
     
-    func initLocationManager() {
+    private func initLocationManager() {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.distanceFilter = locationDistance
         locationManager.allowsBackgroundLocationUpdates = true
         locationManager.pausesLocationUpdatesAutomatically = false
     }
-    
+}
+
+// MARK: Permission & Location
+extension LocationManager {
+   
     func requestPermission() {
         locationManager.requestAlwaysAuthorization()
     }
@@ -61,7 +65,6 @@ final class LocationManager: NSObject, ILocationManager {
         locationManager.stopMonitoringSignificantLocationChanges()
         endBackgroundTask()
     }
-    
 }
 
 // MARK: CLLocationManagerDelegate
@@ -87,12 +90,12 @@ extension LocationManager: CLLocationManagerDelegate {
         case .notDetermined:
             print("konum izni henüz verilmedi")
         default:
-            print("yetki durumu bilinmiyor")
+            print("izin durumu bilinmiyor")
         }
     }
 }
 
-// MARK: Background Mode
+// MARK: Private Background Mode
 private extension LocationManager {
     
     func registerBackgroundTask() {
