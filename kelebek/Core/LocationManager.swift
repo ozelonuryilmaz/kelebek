@@ -72,9 +72,11 @@ extension LocationManager: CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let latestLocation = locations.last else { return }
-        
-        if let lastLocation = lastSentLocation, latestLocation.distance(from: lastLocation) < locationDistance {
-            return
+
+        if let lastLocation = lastSentLocation {
+            if latestLocation.distance(from: lastLocation) < locationDistance {
+                return
+            }
         }
         
         lastSentLocation = latestLocation
@@ -99,7 +101,8 @@ extension LocationManager: CLLocationManagerDelegate {
 private extension LocationManager {
     
     func registerBackgroundTask() {
-        backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: "LocationTracking", expirationHandler: {
+        backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: "LocationTracking",
+                                                                    expirationHandler: {
             self.endBackgroundTask()
         })
     }

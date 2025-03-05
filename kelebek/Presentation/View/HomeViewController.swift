@@ -47,7 +47,7 @@ final class HomeViewController: UIViewController {
         viewModel.currentLocationSubject
             .receive(on: DispatchQueue.main)
             .sink { [weak self] location in
-                
+                print("*** \(location?.description ?? "")")
             }
             .store(in: &cancellables)
     }
@@ -56,7 +56,7 @@ final class HomeViewController: UIViewController {
         viewModel.isTrackingActiveSubject
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isTrackingActive in
-                
+                print("*** \(isTrackingActive.description)")
             }
             .store(in: &cancellables)
     }

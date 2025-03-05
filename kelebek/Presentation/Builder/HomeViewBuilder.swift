@@ -8,9 +8,13 @@
 import UIKit
 
 enum HomeViewBuilder {
-    
     static func build() -> UIViewController {
-        let viewModel = HomeViewModel()
-        return HomeViewController(viewModel: viewModel)
+        let locationManager = LocationManager()
+        let coreDataManager = CoreDataManager()
+        let locationUseCase = LocationUseCase(locationManager: locationManager,
+                                              coreDataManager: coreDataManager)
+        let viewModel = HomeViewModel(locationUseCase: locationUseCase)
+        let viewController = HomeViewController(viewModel: viewModel)
+        return viewController
     }
 }
