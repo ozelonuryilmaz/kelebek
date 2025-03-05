@@ -13,11 +13,11 @@ final class HomeViewController: UIViewController {
     
     // MARK: IBOutlets
     @IBOutlet private weak var mapView: MKMapView!
-    @IBOutlet private weak var userTrackingButton: UIButton!
     
     // MARK: Inject
     private let viewModel: IHomeViewModel
     private var cancellables = Set<AnyCancellable>()
+    private var routePolyline: MKPolyline?
     
     init(viewModel: IHomeViewModel) {
         self.viewModel = viewModel
@@ -36,8 +36,16 @@ final class HomeViewController: UIViewController {
     
     private func setupUI() {
         title = "Harita"
+        mapView.delegate = self
+        mapView.showsUserLocation = true
+        
+        // TODO: Kontrol edilecek
+        viewModel.requestLocationPermission()
+        viewModel.startTracking()
+        
+        
     }
-    
+
     private func bindViewModel() {
         observeCurrentLocation()
         observeIsTrackingStatus()
@@ -47,7 +55,8 @@ final class HomeViewController: UIViewController {
         viewModel.currentLocationSubject
             .receive(on: DispatchQueue.main)
             .sink { [weak self] location in
-                print("*** \(location?.description ?? "")")
+                guard let location else { return }
+                self?.updateMap(with: location)
             }
             .store(in: &cancellables)
     }
@@ -60,4 +69,25 @@ final class HomeViewController: UIViewController {
             }
             .store(in: &cancellables)
     }
+
+    private func updateMap(with location: CLLocation) {
+        let coordinate = location.coordinate
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = coordinate
+        annotation.title = "Güncellenen Konum"
+        mapView.addAnnotation(annotation)
+        centerMap(on: location)
+    }
+
+    private func centerMap(on location: CLLocation) {
+        let region = MKCoordinateRegion(center: location.coordinate,
+                                        latitudinalMeters: 1000,
+                                        longitudinalMeters: 1000)
+        mapView.setRegion(region, animated: true)
+    }
+
+}
+
+extension HomeViewController: MKMapViewDelegate {
+
 }

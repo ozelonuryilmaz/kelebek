@@ -42,6 +42,7 @@ final class CoreDataHelper {
 
 // MARK: - Managed Context with Merge Policy
 extension CoreDataHelper {
+
     func getManagedContextWithMergePolicy() -> NSManagedObjectContext {
         let context = persistentContainer.viewContext
         context.mergePolicy = NSMergePolicy(merge: .mergeByPropertyObjectTrumpMergePolicyType)

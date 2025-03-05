@@ -33,7 +33,7 @@ final class HomeViewModel: IHomeViewModel {
     init(locationUseCase: ILocationUseCase) {
         self.locationUseCase = locationUseCase
 
-        loadLastSavedLocation()
+        //loadLastSavedLocation()
         observeLocation()
     }
     

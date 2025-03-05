@@ -26,8 +26,3 @@ enum HomeViewBuilder {
         return viewController
     }
 }
-
-/*
- let coreDataManager = CoreDataManager()
- let locationRepository = LocationRepositoryImplementation(coreDataManager: coreDataManager)
-*/
