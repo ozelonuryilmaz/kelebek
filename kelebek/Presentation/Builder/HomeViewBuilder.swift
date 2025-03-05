@@ -8,13 +8,26 @@
 import UIKit
 
 enum HomeViewBuilder {
+    
     static func build() -> UIViewController {
+        
         let locationManager = LocationManager()
-        let coreDataManager = CoreDataManager()
+        
+        let managedContext = CoreDataHelper.shared.getCoreDataManagedContextWithMergePolicy()
+        let locationEntityCoreDataManager = LocationEntityCoreDataManager(managedContext: managedContext)
+
         let locationUseCase = LocationUseCase(locationManager: locationManager,
-                                              coreDataManager: coreDataManager)
+                                              locationEntityCoreDataManager: locationEntityCoreDataManager)
+        
         let viewModel = HomeViewModel(locationUseCase: locationUseCase)
+        
         let viewController = HomeViewController(viewModel: viewModel)
+        
         return viewController
     }
 }
+
+/*
+ let coreDataManager = CoreDataManager()
+ let locationRepository = LocationRepositoryImplementation(coreDataManager: coreDataManager)
+*/

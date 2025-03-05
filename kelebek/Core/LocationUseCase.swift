@@ -22,7 +22,7 @@ protocol ILocationUseCase {
 final class LocationUseCase: ILocationUseCase {
     
     private let locationManager: ILocationManager
-    private let coreDataManager: ICoreDataManager
+    private let locationEntityCoreDataManager: ILocationEntityCoreDataManager
     private var cancellables = Set<AnyCancellable>()
     
     internal var locationPublisher: LocationPublisher {
@@ -30,9 +30,9 @@ final class LocationUseCase: ILocationUseCase {
     }
     
     init(locationManager: ILocationManager,
-         coreDataManager: ICoreDataManager) {
+         locationEntityCoreDataManager: ILocationEntityCoreDataManager) {
         self.locationManager = locationManager
-        self.coreDataManager = coreDataManager
+        self.locationEntityCoreDataManager = locationEntityCoreDataManager
         
         setupBindings()
     }
@@ -41,6 +41,7 @@ final class LocationUseCase: ILocationUseCase {
         locationPublisher
             .receive(on: DispatchQueue.global(qos: .background))
             .sink { [weak self] location in
+                self?.clearAllLocations()
                 self?.saveLocation(location)
             }
             .store(in: &cancellables)
@@ -67,15 +68,16 @@ extension LocationUseCase {
 extension LocationUseCase {
    
     func saveLocation(_ location : CLLocation) {
-        // TODO: CoreData eklendiğinde konumu kaydet
+        locationEntityCoreDataManager.insertLocationEntity(lat: location.coordinate.latitude,
+                                                           lon: location.coordinate.longitude)
     }
     
     func getLastSavedLocation() -> CLLocation? {
-        // TODO: CoreData eklendiğinde son konumu getir
-        return nil
+        guard let location = locationEntityCoreDataManager.getLastLocationEntity() else { return nil }
+        return CLLocation(latitude: location.lat, longitude: location.lon)
     }
     
     func clearAllLocations() {
-        // TODO: CoreData eklendiğinde tüm kayıtları sil
+        locationEntityCoreDataManager.clearAllLocationEntity()
     }
 }
