@@ -8,21 +8,28 @@
 import Foundation
 import CoreData
 
-final class CoreDataHelper {
+enum CoreDataModel: String {
+    case kelebek = "Kelebekapp"
+}
 
-    static let shared = CoreDataHelper() // Opsiyonel: Singleton tercih edilmeyebilir
-    
-    private init() { }
-    
-    lazy var persistentContainer: NSPersistentContainer = {
-        let container = NSPersistentContainer(name: "Kelebekapp")
-        container.loadPersistentStores { storeDescription, error in
+protocol ICoreDataHelper {
+    var viewContext: NSManagedObjectContext { get }
+    func saveContext()
+    func getManagedContextWithMergePolicy() -> NSManagedObjectContext
+}
+
+final class CoreDataHelper: ICoreDataHelper {
+
+    private let persistentContainer: NSPersistentContainer
+
+    init(container: CoreDataModel = .kelebek) {
+        self.persistentContainer = NSPersistentContainer(name: container.rawValue)
+        self.persistentContainer.loadPersistentStores { storeDescription, error in
             if let error = error as NSError? {
                 print("Core Data yüklenirken hata oluştu: \(error.localizedDescription)")
             }
         }
-        return container
-    }()
+    }
 
     var viewContext: NSManagedObjectContext {
         return persistentContainer.viewContext
@@ -38,10 +45,6 @@ final class CoreDataHelper {
             print("Core Data kaydetme hatası: \(error.localizedDescription)")
         }
     }
-}
-
-// MARK: - Managed Context with Merge Policy
-extension CoreDataHelper {
 
     func getManagedContextWithMergePolicy() -> NSManagedObjectContext {
         let context = persistentContainer.viewContext

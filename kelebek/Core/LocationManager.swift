@@ -5,15 +5,18 @@
 //  Created by Onur Yılmaz on 4.03.2025.
 //
 
-import UIKit
+import UIKit // TODO: UIKit kullanmamalıyım. Düzeltilecek
+
 import CoreLocation
 import Combine
 
 typealias LocationPublisher = AnyPublisher<CLLocation, Never>
+typealias LMLocation = CLLocation
 
 protocol ILocationManager {
     var locationPublisher: LocationPublisher { get }
-    var lastSentLocation: CLLocation? { get }
+    var lastSentLocation: LMLocation? { get }
+
     func requestPermission(completion: @escaping (Bool) -> Void)
     func startUpdatingLocation()
     func stopUpdatingLocation()
@@ -29,7 +32,7 @@ final class LocationManager: NSObject, ILocationManager {
     private var backgroundTaskID: UIBackgroundTaskIdentifier = UIBackgroundTaskIdentifier.invalid
     private var permissionCompletion: ((Bool) -> Void)?
     
-    private(set) var lastSentLocation: CLLocation? = nil
+    private(set) var lastSentLocation: LMLocation? = nil
 
     internal var locationPublisher: LocationPublisher {
         locationSubject.eraseToAnyPublisher()
@@ -48,7 +51,7 @@ final class LocationManager: NSObject, ILocationManager {
         locationManager.pausesLocationUpdatesAutomatically = false
     }
     
-    func clearLastKnownLocation() {
+    internal func clearLastKnownLocation() {
         self.lastSentLocation = nil
     }
 }

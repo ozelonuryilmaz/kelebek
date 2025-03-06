@@ -77,8 +77,12 @@ final class HomeViewController: UIViewController {
             }
             .store(in: &cancellables)
     }
+}
 
-    private func updateMap(with location: CLLocation) {
+// MARK: Annotation
+private extension HomeViewController {
+    
+    func updateMap(with location: CLLocation) {
         let coordinate = location.coordinate
         removeAnnotation()
         addAnnotation(coordinate: coordinate)
@@ -86,37 +90,11 @@ final class HomeViewController: UIViewController {
         mapView.setRegion(region, animated: true)
     }
     
-    private func updateRoute(with route: MKPolyline) {
-        removeOverlays()
-        mapView.addOverlay(route)
-    }
-    
-    private func removeOverlays() {
-        mapView.removeOverlays(mapView.overlays)
-    }
-}
-
-// MARK: MKMapViewDelegate
-extension HomeViewController: MKMapViewDelegate {
-
-    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        if let polyline = overlay as? MKPolyline {
-            let renderer = MKPolylineRenderer(polyline: polyline)
-            renderer.strokeColor = .blue
-            renderer.lineWidth = 5
-            return renderer
+    func removeAnnotation() {
+        if let annotation = currentAnnotation {
+            mapView.removeAnnotation(annotation)
         }
-        return MKOverlayRenderer()
     }
-    
-    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        guard let annotation = view.annotation else { return }
-        fetchAddress(for: annotation.coordinate)
-    }
-}
-
-// MARK: Annotation
-private extension HomeViewController {
     
     func addAnnotation(coordinate: CLLocationCoordinate2D) {
         let annotation = MKPointAnnotation()
@@ -124,11 +102,20 @@ private extension HomeViewController {
         mapView.addAnnotation(annotation)
         currentAnnotation = annotation
     }
+}
 
-    func removeAnnotation() {
-        if let annotation = currentAnnotation {
-            mapView.removeAnnotation(annotation)
+// MARK: Route
+private extension HomeViewController {
+    
+    func updateRoute(with route: MKPolyline) {
+        if let existingOverlay = mapView.overlays.first(where: { $0 is MKPolyline }) {
+            mapView.removeOverlay(existingOverlay)
         }
+        mapView.addOverlay(route)
+    }
+    
+    func removeOverlays() {
+        mapView.removeOverlays(mapView.overlays)
     }
 }
 
@@ -142,7 +129,7 @@ private extension HomeViewController {
     }
 
     @objc func btnResetRouteTapped() {
-        viewModel.resetRoute()
+        viewModel.clearAllFixedLocations()
         removeOverlays()
     }
 
@@ -156,13 +143,8 @@ private extension HomeViewController {
     }
 }
 
-// MARK: Private Props
+// MARK: Permission
 private extension HomeViewController {
-    
-    func updateTrackingButtonTitle(isTrackingActive: Bool) {
-        let title = isTrackingActive ? "Konum Takibini Durdur" : "Konum Takibini Başlat"
-        trackingButton.setTitle(title, for: .normal)
-    }
     
     func checkLocationPermissionAndStart() {
         viewModel.requestLocationPermission { [weak self] isGranted in
@@ -174,6 +156,37 @@ private extension HomeViewController {
             }
         }
     }
+    
+    func showLocationPermissionAlert() {
+        let alert = UIAlertController(
+            title: "Konum İzni Gerekli",
+            message: "Konum takibini başlatabilmek için lütfen ayarlardan izin verin.",
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(title: "Ayarları Aç", style: .default) { _ in
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            }
+        })
+
+        alert.addAction(UIAlertAction(title: "İptal", style: .cancel, handler: nil))
+        
+        present(alert, animated: true)
+    }
+}
+
+// MARK: Private Props
+private extension HomeViewController {
+    
+    func updateTrackingButtonTitle(isTrackingActive: Bool) {
+        let title = isTrackingActive ? "Konum Takibini Durdur" : "Konum Takibini Başlat"
+        trackingButton.setTitle(title, for: .normal)
+    }
+}
+
+// MARK: Show Address
+private extension HomeViewController {
     
     func fetchAddress(for coordinate: CLLocationCoordinate2D) {
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
@@ -200,22 +213,23 @@ private extension HomeViewController {
         alert.addAction(UIAlertAction(title: "Tamam", style: .default))
         present(alert, animated: true)
     }
+}
+
+// MARK: MKMapViewDelegate
+extension HomeViewController: MKMapViewDelegate {
+
+    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+        if let polyline = overlay as? MKPolyline {
+            let renderer = MKPolylineRenderer(polyline: polyline)
+            renderer.strokeColor = .blue
+            renderer.lineWidth = 5
+            return renderer
+        }
+        return MKOverlayRenderer()
+    }
     
-    func showLocationPermissionAlert() {
-        let alert = UIAlertController(
-            title: "Konum İzni Gerekli",
-            message: "Konum takibini başlatabilmek için lütfen ayarlardan izin verin.",
-            preferredStyle: .alert
-        )
-
-        alert.addAction(UIAlertAction(title: "Ayarları Aç", style: .default) { _ in
-            if let url = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(url, options: [:], completionHandler: nil)
-            }
-        })
-
-        alert.addAction(UIAlertAction(title: "İptal", style: .cancel, handler: nil))
-        
-        present(alert, animated: true)
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        guard let annotation = view.annotation else { return }
+        fetchAddress(for: annotation.coordinate)
     }
 }

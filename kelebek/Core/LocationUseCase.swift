@@ -70,8 +70,10 @@ extension LocationUseCase {
 extension LocationUseCase {
    
     func saveFixedLocation(_ location : CLLocation) {
-        locationEntityCoreDataManager.insertLocationEntity(lat: location.coordinate.latitude,
-                                                           lon: location.coordinate.longitude)
+        locationEntityCoreDataManager.insertLocationEntity(
+            model: LocationEntityModel(lat: location.coordinate.latitude,
+                                       lon: location.coordinate.longitude)
+        )
     }
     
     func getLastSavedFixedLocation() -> CLLocation? {

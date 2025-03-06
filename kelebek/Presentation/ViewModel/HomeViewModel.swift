@@ -6,38 +6,38 @@
 //
 
 import Foundation
-import CoreLocation
 import Combine
-import MapKit
-
-typealias CurrentLocationSubject = PassthroughSubject<CLLocation?, Never>
-typealias CurrentRouteSubject = PassthroughSubject<MKPolyline?, Never>
 
 protocol IHomeViewModel {
     var currentLocationSubject: CurrentLocationSubject { get }
     var currentRouteSubject: CurrentRouteSubject { get }
     var isTrackingActive: Bool { get }
     
+    // LocationUseCase
     func requestLocationPermission(completion: @escaping (Bool) -> Void)
     func startTracking()
     func stopTracking()
+    func updateFixedLocation(_ location: LMLocation)
+    func clearAllFixedLocations()
 
-    func generateRouteFromCurrentLocation(to fixedLocation: CLLocation)
-    func updateFixedLocation(_ location: CLLocation)
-    func resetRoute()
+    // Route
+    func generateRouteFromCurrentLocation(to fixedLocation: LMLocation)
 }
 
 final class HomeViewModel: IHomeViewModel {
     
     private let locationUseCase: ILocationUseCase
+    private let routeUseCase: IRouteUseCase
     private var cancellables = Set<AnyCancellable>()
     
     private(set) var currentLocationSubject = CurrentLocationSubject()
     private(set) var currentRouteSubject = CurrentRouteSubject()
     private(set) var isTrackingActive: Bool = false
 
-    init(locationUseCase: ILocationUseCase) {
+    init(locationUseCase: ILocationUseCase,
+         routeUseCase: IRouteUseCase) {
         self.locationUseCase = locationUseCase
+        self.routeUseCase = routeUseCase
         observeLocation()
     }
 
@@ -71,43 +71,40 @@ extension HomeViewModel {
         isTrackingActive = false
         clearRoute()
     }
-}
 
-// MARK: Route
-extension HomeViewModel {
-    
-    func updateFixedLocation(_ location: CLLocation) {
+    func updateFixedLocation(_ location: LMLocation) {
         locationUseCase.saveFixedLocation(location)
     }
     
-    func resetRoute() {
+    func clearAllFixedLocations() {
         locationUseCase.clearAllFixedLocations()
     }
+}
 
-    func generateRouteFromCurrentLocation(to fixedLocation: CLLocation) {
-        guard let userLocation = locationUseCase.getLastKnownLocation(), isTrackingActive else { return }
-        generateRoute(from: userLocation, to: fixedLocation)
-    }
-
+// MARK: RouteUseCase
+extension HomeViewModel {
+    
     private func clearRoute() {
         currentRouteSubject.send(nil)
     }
 
-    private func checkAndGenerateRoute(from location: CLLocation) {
-        guard let fixedLocation = locationUseCase.getLastSavedFixedLocation(), isTrackingActive else { return }
-        generateRoute(from: location, to: fixedLocation)
+    func generateRouteFromCurrentLocation(to fixedLocation: LMLocation) {
+        guard let userLocation = locationUseCase.getLastKnownLocation(), isTrackingActive else { return }
+        executeRouteGeneration(from: userLocation, to: fixedLocation)
     }
 
-    private func generateRoute(from userLocation: CLLocation, to fixedLocation: CLLocation) {
-        let request = MKDirections.Request()
-        request.source = MKMapItem(placemark: MKPlacemark(coordinate: userLocation.coordinate))
-        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: fixedLocation.coordinate))
-        request.transportType = .automobile
+    private func checkAndGenerateRoute(from location: LMLocation) {
+        guard let fixedLocation = locationUseCase.getLastSavedFixedLocation(), isTrackingActive else { return }
+        executeRouteGeneration(from: location, to: fixedLocation)
+    }
 
-        let directions = MKDirections(request: request)
-        directions.calculate { [weak self] response, error in
-            guard let self = self, let route = response?.routes.first else { return }
-            self.currentRouteSubject.send(route.polyline)
-        }
+    private func executeRouteGeneration(from source: LMLocation, to destination: LMLocation) {
+        routeUseCase.generateRoute(from: source, to: destination)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] route in
+                self?.currentRouteSubject.send(route)
+            }
+            .store(in: &cancellables)
     }
 }
+
