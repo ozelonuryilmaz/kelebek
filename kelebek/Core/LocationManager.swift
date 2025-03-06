@@ -13,6 +13,7 @@ typealias LocationPublisher = AnyPublisher<CLLocation, Never>
 
 protocol ILocationManager {
     var locationPublisher: LocationPublisher { get }
+    var lastSentLocation: CLLocation? { get }
     func requestPermission(completion: @escaping (Bool) -> Void)
     func startUpdatingLocation()
     func stopUpdatingLocation()
@@ -23,9 +24,11 @@ final class LocationManager: NSObject, ILocationManager {
     private let locationManager = CLLocationManager()
     private let locationSubject = PassthroughSubject<CLLocation, Never>()
     private let locationDistance = CLLocationDistance(100)
+
     private var backgroundTaskID: UIBackgroundTaskIdentifier = UIBackgroundTaskIdentifier.invalid
-    private var lastSentLocation: CLLocation? = nil
     private var permissionCompletion: ((Bool) -> Void)?
+    
+    private(set) var lastSentLocation: CLLocation? = nil
 
     internal var locationPublisher: LocationPublisher {
         locationSubject.eraseToAnyPublisher()

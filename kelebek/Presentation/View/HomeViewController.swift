@@ -121,7 +121,7 @@ private extension HomeViewController {
     @objc func goToRoute() {
         let goAnywhere = CLLocation(latitude: 41.0053, longitude: 28.9770)
         viewModel.updateFixedLocation(goAnywhere)
-        checkLocationPermissionAndStart()
+        viewModel.generateRouteFromCurrentLocation(to: goAnywhere)
     }
 
     @objc func resetRoute() {
@@ -131,6 +131,7 @@ private extension HomeViewController {
     
     @objc func toggleTracking() {
         if viewModel.isTrackingActive {
+            resetRoute()
             viewModel.stopTracking()
         } else {
             checkLocationPermissionAndStart()

@@ -21,7 +21,8 @@ protocol IHomeViewModel {
     func requestLocationPermission(completion: @escaping (Bool) -> Void)
     func startTracking()
     func stopTracking()
-    
+
+    func generateRouteFromCurrentLocation(to fixedLocation: CLLocation)
     func updateFixedLocation(_ location: CLLocation)
     func resetRoute()
 }
@@ -80,6 +81,11 @@ extension HomeViewModel {
     
     func resetRoute() {
         locationUseCase.clearAllFixedLocations()
+    }
+    
+    func generateRouteFromCurrentLocation(to fixedLocation: CLLocation) {
+        guard let userLocation = locationUseCase.getLastKnownLocation() else { return }
+        generateRoute(from: userLocation, to: fixedLocation)
     }
     
     private func checkAndGenerateRoute(from location: CLLocation) {

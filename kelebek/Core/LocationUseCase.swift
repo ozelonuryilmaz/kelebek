@@ -16,6 +16,7 @@ protocol ILocationUseCase {
     func requestLocationPermission(completion: @escaping (Bool) -> Void)
     func startTracking()
     func stopTracking()
+    func getLastKnownLocation() -> CLLocation?
     
     // CoreData
     func saveFixedLocation(_ location : CLLocation)
@@ -53,6 +54,10 @@ extension LocationUseCase {
     
     func stopTracking() {
         locationManager.stopUpdatingLocation()
+    }
+    
+    func getLastKnownLocation() -> CLLocation? {
+        return locationManager.lastSentLocation
     }
 }
 
