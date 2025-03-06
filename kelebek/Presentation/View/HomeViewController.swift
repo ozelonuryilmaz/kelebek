@@ -19,6 +19,7 @@ final class HomeViewController: UIViewController {
     
     // MARK: Inject
     private let viewModel: IHomeViewModel
+    private let geocoder = CLGeocoder()
     private var cancellables = Set<AnyCancellable>()
     private var currentAnnotation: MKPointAnnotation?
     
@@ -35,14 +36,14 @@ final class HomeViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         bindViewModel()
-        viewModel.startTracking()
-        trackingButton.addTarget(self, action: #selector(self.toggleTracking), for: .touchUpInside)
-        goToRouteButton.addTarget(self, action: #selector(self.goToRoute), for: .touchUpInside)
-        resetRouteButton.addTarget(self, action: #selector(self.resetRoute), for: .touchUpInside)
+        checkLocationPermissionAndStart()
     }
     
     private func setupUI() {
         mapView.delegate = self
+        trackingButton.addTarget(self, action: #selector(self.toggleTracking), for: .touchUpInside)
+        goToRouteButton.addTarget(self, action: #selector(self.goToRoute), for: .touchUpInside)
+        resetRouteButton.addTarget(self, action: #selector(self.resetRoute), for: .touchUpInside)
     }
 
     private func bindViewModel() {
@@ -79,7 +80,6 @@ final class HomeViewController: UIViewController {
 
         let annotation = MKPointAnnotation()
         annotation.coordinate = coordinate
-        annotation.title = "Güncellenen Konum"
         mapView.addAnnotation(annotation)
 
         currentAnnotation = annotation
@@ -108,6 +108,11 @@ extension HomeViewController: MKMapViewDelegate {
         }
         return MKOverlayRenderer()
     }
+    
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        guard let annotation = view.annotation else { return }
+        fetchAddress(for: annotation.coordinate)
+    }
 }
 
 // MARK: OnTap
@@ -116,7 +121,7 @@ private extension HomeViewController {
     @objc func goToRoute() {
         let goAnywhere = CLLocation(latitude: 41.0053, longitude: 28.9770)
         viewModel.updateFixedLocation(goAnywhere)
-        viewModel.startTracking()
+        checkLocationPermissionAndStart()
     }
 
     @objc func resetRoute() {
@@ -128,14 +133,7 @@ private extension HomeViewController {
         if viewModel.isTrackingActive {
             viewModel.stopTracking()
         } else {
-            viewModel.requestLocationPermission { [weak self] isGranted in
-                guard let self else { return }
-                if isGranted {
-                    self.viewModel.startTracking()
-                } else {
-                    self.showLocationPermissionAlert()
-                }
-            }
+            checkLocationPermissionAndStart()
         }
         updateTrackingButtonTitle(isTrackingActive: viewModel.isTrackingActive)
     }
@@ -147,6 +145,43 @@ private extension HomeViewController {
     func updateTrackingButtonTitle(isTrackingActive: Bool) {
         let title = isTrackingActive ? "Konum Takibini Durdur" : "Konum Takibini Başlat"
         trackingButton.setTitle(title, for: .normal)
+    }
+    
+    func checkLocationPermissionAndStart() {
+        viewModel.requestLocationPermission { [weak self] isGranted in
+            guard let self else { return }
+            if isGranted {
+                self.viewModel.startTracking()
+            } else {
+                self.showLocationPermissionAlert()
+            }
+        }
+    }
+    
+    func fetchAddress(for coordinate: CLLocationCoordinate2D) {
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        
+        geocoder.reverseGeocodeLocation(location) { [weak self] (placemarks, error) in
+            guard let self = self, error == nil, let placemark = placemarks?.first else {
+                self?.showAddressAlert(address: "Adres bulunamadı.")
+                return
+            }
+            
+            let address = """
+            \(placemark.name ?? ""),
+            \(placemark.locality ?? ""),
+            \(placemark.administrativeArea ?? ""),
+            \(placemark.country ?? "")
+            """
+            
+            self.showAddressAlert(address: address)
+        }
+    }
+
+    func showAddressAlert(address: String) {
+        let alert = UIAlertController(title: "Adres Bilgisi", message: address, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Tamam", style: .default))
+        present(alert, animated: true)
     }
     
     func showLocationPermissionAlert() {

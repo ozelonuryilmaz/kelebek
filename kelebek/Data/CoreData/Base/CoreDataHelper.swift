@@ -10,7 +10,7 @@ import CoreData
 
 final class CoreDataHelper {
 
-    static let shared = CoreDataHelper() // Opsiyonel: Test için bağımsız hale getirebiliriz.
+    static let shared = CoreDataHelper() // Opsiyonel: Singleton tercih edilmeyebilir
     
     private init() { }
     
