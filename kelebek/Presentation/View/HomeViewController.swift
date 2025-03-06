@@ -19,9 +19,11 @@ final class HomeViewController: UIViewController {
     
     // MARK: Inject
     private let viewModel: IHomeViewModel
+
+    // MARK: Definitions
     private let geocoder = CLGeocoder()
     private var cancellables = Set<AnyCancellable>()
-    private var currentAnnotation: MKPointAnnotation?
+    private var currentAnnotation: MKPointAnnotation? = nil
     
     init(viewModel: IHomeViewModel) {
         self.viewModel = viewModel
@@ -65,8 +67,12 @@ final class HomeViewController: UIViewController {
         viewModel.currentRouteSubject
             .receive(on: DispatchQueue.main)
             .sink { [weak self] route in
-                guard let route else { return }
-                self?.updateRoute(with: route)
+                guard let self else { return }
+                if let route = route {
+                    self.updateRoute(with: route)
+                } else {
+                    self.removeOverlays()
+                }
             }
             .store(in: &cancellables)
     }
@@ -91,8 +97,12 @@ final class HomeViewController: UIViewController {
     }
     
     private func updateRoute(with route: MKPolyline) {
-        mapView.removeOverlays(mapView.overlays)
+        removeOverlays()
         mapView.addOverlay(route)
+    }
+    
+    private func removeOverlays() {
+        mapView.removeOverlays(mapView.overlays)
     }
 }
 
@@ -126,12 +136,11 @@ private extension HomeViewController {
 
     @objc func resetRoute() {
         viewModel.resetRoute()
-        mapView.removeOverlays(mapView.overlays)
+        removeOverlays()
     }
-    
+
     @objc func toggleTracking() {
         if viewModel.isTrackingActive {
-            resetRoute()
             viewModel.stopTracking()
         } else {
             checkLocationPermissionAndStart()

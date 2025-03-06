@@ -17,6 +17,7 @@ protocol ILocationManager {
     func requestPermission(completion: @escaping (Bool) -> Void)
     func startUpdatingLocation()
     func stopUpdatingLocation()
+    func clearLastKnownLocation()
 }
 
 final class LocationManager: NSObject, ILocationManager {
@@ -45,6 +46,10 @@ final class LocationManager: NSObject, ILocationManager {
         locationManager.distanceFilter = locationDistance
         locationManager.allowsBackgroundLocationUpdates = true
         locationManager.pausesLocationUpdatesAutomatically = false
+    }
+    
+    func clearLastKnownLocation() {
+        self.lastSentLocation = nil
     }
 }
 

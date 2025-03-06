@@ -17,6 +17,7 @@ protocol ILocationUseCase {
     func startTracking()
     func stopTracking()
     func getLastKnownLocation() -> CLLocation?
+    func clearLastKnownLocation()
     
     // CoreData
     func saveFixedLocation(_ location : CLLocation)
@@ -58,6 +59,10 @@ extension LocationUseCase {
     
     func getLastKnownLocation() -> CLLocation? {
         return locationManager.lastSentLocation
+    }
+    
+    func clearLastKnownLocation() {
+        return locationManager.clearLastKnownLocation()
     }
 }
 
