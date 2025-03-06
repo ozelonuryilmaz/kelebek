@@ -64,11 +64,6 @@ extension HomeViewModel {
     func startTracking() {
         locationUseCase.startTracking()
         isTrackingActive = true
-
-        if let userLocation = locationUseCase.getLastKnownLocation(),
-            let fixedLocation = locationUseCase.getLastSavedFixedLocation() {
-                generateRoute(from: userLocation, to: fixedLocation)
-        }
     }
     
     func stopTracking() {
@@ -89,15 +84,15 @@ extension HomeViewModel {
         locationUseCase.clearAllFixedLocations()
     }
 
-    private func clearRoute() {
-        currentRouteSubject.send(nil)
-    }
-    
     func generateRouteFromCurrentLocation(to fixedLocation: CLLocation) {
         guard let userLocation = locationUseCase.getLastKnownLocation(), isTrackingActive else { return }
         generateRoute(from: userLocation, to: fixedLocation)
     }
-    
+
+    private func clearRoute() {
+        currentRouteSubject.send(nil)
+    }
+
     private func checkAndGenerateRoute(from location: CLLocation) {
         guard let fixedLocation = locationUseCase.getLastSavedFixedLocation(), isTrackingActive else { return }
         generateRoute(from: location, to: fixedLocation)

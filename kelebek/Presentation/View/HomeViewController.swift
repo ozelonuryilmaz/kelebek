@@ -43,9 +43,9 @@ final class HomeViewController: UIViewController {
     
     private func setupUI() {
         mapView.delegate = self
-        trackingButton.addTarget(self, action: #selector(self.toggleTracking), for: .touchUpInside)
-        goToRouteButton.addTarget(self, action: #selector(self.goToRoute), for: .touchUpInside)
-        resetRouteButton.addTarget(self, action: #selector(self.resetRoute), for: .touchUpInside)
+        trackingButton.addTarget(self, action: #selector(self.btnTrackingTapped), for: .touchUpInside)
+        goToRouteButton.addTarget(self, action: #selector(self.btnGoToRouteTapped), for: .touchUpInside)
+        resetRouteButton.addTarget(self, action: #selector(self.btnResetRouteTapped), for: .touchUpInside)
     }
 
     private func bindViewModel() {
@@ -59,6 +59,7 @@ final class HomeViewController: UIViewController {
             .sink { [weak self] location in
                 guard let location else { return }
                 self?.updateMap(with: location)
+                self?.updateTrackingButtonTitle(isTrackingActive: true)
             }
             .store(in: &cancellables)
     }
@@ -79,20 +80,9 @@ final class HomeViewController: UIViewController {
 
     private func updateMap(with location: CLLocation) {
         let coordinate = location.coordinate
-
-        if let annotation = currentAnnotation {
-            mapView.removeAnnotation(annotation)
-        }
-
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = coordinate
-        mapView.addAnnotation(annotation)
-
-        currentAnnotation = annotation
-
-        let region = MKCoordinateRegion(center: coordinate,
-                                        latitudinalMeters: 500,
-                                        longitudinalMeters: 500)
+        removeAnnotation()
+        addAnnotation(coordinate: coordinate)
+        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
         mapView.setRegion(region, animated: true)
     }
     
@@ -125,21 +115,38 @@ extension HomeViewController: MKMapViewDelegate {
     }
 }
 
+// MARK: Annotation
+private extension HomeViewController {
+    
+    func addAnnotation(coordinate: CLLocationCoordinate2D) {
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = coordinate
+        mapView.addAnnotation(annotation)
+        currentAnnotation = annotation
+    }
+
+    func removeAnnotation() {
+        if let annotation = currentAnnotation {
+            mapView.removeAnnotation(annotation)
+        }
+    }
+}
+
 // MARK: OnTap
 private extension HomeViewController {
     
-    @objc func goToRoute() {
+    @objc func btnGoToRouteTapped() {
         let goAnywhere = CLLocation(latitude: 41.0053, longitude: 28.9770)
         viewModel.updateFixedLocation(goAnywhere)
         viewModel.generateRouteFromCurrentLocation(to: goAnywhere)
     }
 
-    @objc func resetRoute() {
+    @objc func btnResetRouteTapped() {
         viewModel.resetRoute()
         removeOverlays()
     }
 
-    @objc func toggleTracking() {
+    @objc func btnTrackingTapped() {
         if viewModel.isTrackingActive {
             viewModel.stopTracking()
         } else {

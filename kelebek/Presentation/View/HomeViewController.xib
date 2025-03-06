@@ -28,28 +28,32 @@
                     <standardMapConfiguration key="preferredConfiguration"/>
                 </mapView>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="kiZ-Tp-tCV">
-                    <rect key="frame" x="302" y="751" width="75" height="35"/>
+                    <rect key="frame" x="187.33333333333337" y="751" width="189.66666666666663" height="35"/>
                     <constraints>
                         <constraint firstAttribute="height" constant="35" id="ZgH-G9-FPi"/>
                     </constraints>
+                    <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
                     <state key="normal" title="Button"/>
-                    <buttonConfiguration key="configuration" style="plain" title="Button"/>
+                    <buttonConfiguration key="configuration" style="plain" title="Konum Takibini Başlat"/>
                 </button>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="1Vx-pK-FQM">
-                    <rect key="frame" x="302" y="649" width="75" height="35"/>
+                    <rect key="frame" x="250" y="665" width="127" height="35"/>
                     <constraints>
                         <constraint firstAttribute="height" constant="35" id="ETJ-H1-OLa"/>
                     </constraints>
+                    <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     <state key="normal" title="Button"/>
-                    <buttonConfiguration key="configuration" style="plain" title="Button"/>
+                    <buttonConfiguration key="configuration" style="plain" title="Rota'yı Başlat"/>
                 </button>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="OUF-Pf-Jcr">
-                    <rect key="frame" x="302" y="700" width="75" height="35"/>
+                    <rect key="frame" x="244" y="708" width="133" height="35"/>
                     <constraints>
                         <constraint firstAttribute="height" constant="35" id="6D2-Ob-Q1i"/>
                     </constraints>
+                    <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     <state key="normal" title="Button"/>
-                    <buttonConfiguration key="configuration" style="plain" title="Button"/>
+                    <buttonConfiguration key="configuration" style="plain" title="Rota'yı İptal Et"/>
                 </button>
             </subviews>
             <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
@@ -60,8 +64,8 @@
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="kiZ-Tp-tCV" secondAttribute="trailing" constant="16" id="IcU-FE-wdi"/>
                 <constraint firstItem="MiU-kv-9um" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="MhI-6q-YDc"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="1Vx-pK-FQM" secondAttribute="trailing" constant="16" id="RaK-dp-1W1"/>
-                <constraint firstItem="OUF-Pf-Jcr" firstAttribute="top" secondItem="1Vx-pK-FQM" secondAttribute="bottom" constant="16" id="W7F-ej-X25"/>
-                <constraint firstItem="kiZ-Tp-tCV" firstAttribute="top" secondItem="OUF-Pf-Jcr" secondAttribute="bottom" constant="16" id="hbF-89-WHR"/>
+                <constraint firstItem="OUF-Pf-Jcr" firstAttribute="top" secondItem="1Vx-pK-FQM" secondAttribute="bottom" constant="8" id="W7F-ej-X25"/>
+                <constraint firstItem="kiZ-Tp-tCV" firstAttribute="top" secondItem="OUF-Pf-Jcr" secondAttribute="bottom" constant="8" id="hbF-89-WHR"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="OUF-Pf-Jcr" secondAttribute="trailing" constant="16" id="ngg-hx-YXc"/>
                 <constraint firstItem="MiU-kv-9um" firstAttribute="trailing" secondItem="vUN-kp-3ea" secondAttribute="trailing" id="pCG-2D-lQe"/>
                 <constraint firstAttribute="bottom" secondItem="MiU-kv-9um" secondAttribute="bottom" id="q7O-05-h2n"/>
