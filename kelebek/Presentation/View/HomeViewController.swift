@@ -9,6 +9,8 @@ import UIKit
 import MapKit
 import Combine
 
+// MARK: Coordinator, Repository, ViewState, UIModel kullanımı için "https://github.com/ozelonuryilmaz/berkel" Repository kontrole edebilirsiniz
+
 final class HomeViewController: KelebekBaseViewController {
     
     // MARK: IBOutlets
@@ -120,6 +122,7 @@ private extension HomeViewController {
 private extension HomeViewController {
     
     @objc func btnGoToRouteTapped() {
+        // Varış noktası dinamik olarak değiştirilebilir.
         let goAnywhere = CLLocation(latitude: 41.0053, longitude: 28.9770)
         viewModel.updateFixedLocation(goAnywhere)
         viewModel.generateRouteFromCurrentLocation(to: goAnywhere)
