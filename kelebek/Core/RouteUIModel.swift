@@ -13,11 +13,11 @@ import Combine
 typealias CurrentLocationSubject = PassthroughSubject<CLLocation?, Never>
 typealias CurrentRouteSubject = PassthroughSubject<MKPolyline?, Never>
 
-protocol IRouteUseCase {
+protocol IRouteUIModel {
     func generateRoute(from userLocation: CLLocation, to fixedLocation: CLLocation) -> AnyPublisher<MKPolyline?, Never>
 }
 
-final class RouteUseCase: IRouteUseCase {
+struct RouteUIModel: IRouteUIModel {
     
     func generateRoute(from userLocation: CLLocation, to fixedLocation: CLLocation) -> AnyPublisher<MKPolyline?, Never> {
         return Future<MKPolyline?, Never> { promise in

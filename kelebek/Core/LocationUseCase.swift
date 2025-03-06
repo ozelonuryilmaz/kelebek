@@ -71,8 +71,8 @@ extension LocationUseCase {
    
     func saveFixedLocation(_ location : CLLocation) {
         locationEntityCoreDataManager.insertLocationEntity(
-            model: LocationEntityModel(lat: location.coordinate.latitude,
-                                       lon: location.coordinate.longitude)
+            model: LocationModel(lat: location.coordinate.latitude,
+                                 lon: location.coordinate.longitude)
         )
     }
     

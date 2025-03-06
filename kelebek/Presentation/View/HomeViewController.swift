@@ -9,7 +9,7 @@ import UIKit
 import MapKit
 import Combine
 
-final class HomeViewController: UIViewController {
+final class HomeViewController: KelebekBaseViewController {
     
     // MARK: IBOutlets
     @IBOutlet private weak var mapView: MKMapView!
@@ -21,7 +21,6 @@ final class HomeViewController: UIViewController {
     private let viewModel: IHomeViewModel
 
     // MARK: Definitions
-    private let geocoder = CLGeocoder()
     private var cancellables = Set<AnyCancellable>()
     private var currentAnnotation: MKPointAnnotation? = nil
     
@@ -33,27 +32,25 @@ final class HomeViewController: UIViewController {
     required init?(coder aDecoder: NSCoder) {
         return nil
     }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setupUI()
-        bindViewModel()
-        checkLocationPermissionAndStart()
-    }
-    
-    private func setupUI() {
-        mapView.delegate = self
-        trackingButton.addTarget(self, action: #selector(self.btnTrackingTapped), for: .touchUpInside)
-        goToRouteButton.addTarget(self, action: #selector(self.btnGoToRouteTapped), for: .touchUpInside)
-        resetRouteButton.addTarget(self, action: #selector(self.btnResetRouteTapped), for: .touchUpInside)
-    }
 
-    private func bindViewModel() {
+    override func initialComponents() {
+        mapView.delegate = self
+        checkLocationPermissionAndStart()
         observeCurrentLocation()
         observeCurrentRoute()
     }
     
-    private func observeCurrentLocation() {
+    override func registerEvents() {
+        trackingButton.addTarget(self, action: #selector(self.btnTrackingTapped), for: .touchUpInside)
+        goToRouteButton.addTarget(self, action: #selector(self.btnGoToRouteTapped), for: .touchUpInside)
+        resetRouteButton.addTarget(self, action: #selector(self.btnResetRouteTapped), for: .touchUpInside)
+    }
+}
+
+// MARK: Observe
+private extension HomeViewController {
+
+    func observeCurrentLocation() {
         viewModel.currentLocationSubject
             .receive(on: DispatchQueue.main)
             .sink { [weak self] location in
@@ -63,8 +60,8 @@ final class HomeViewController: UIViewController {
             }
             .store(in: &cancellables)
     }
-    
-    private func observeCurrentRoute() {
+
+    func observeCurrentRoute() {
         viewModel.currentRouteSubject
             .receive(on: DispatchQueue.main)
             .sink { [weak self] route in
@@ -119,7 +116,7 @@ private extension HomeViewController {
     }
 }
 
-// MARK: OnTap
+// MARK: Button Actions
 private extension HomeViewController {
     
     @objc func btnGoToRouteTapped() {
@@ -158,21 +155,17 @@ private extension HomeViewController {
     }
     
     func showLocationPermissionAlert() {
-        let alert = UIAlertController(
+        self.showSystemAlert(
             title: "Konum İzni Gerekli",
             message: "Konum takibini başlatabilmek için lütfen ayarlardan izin verin.",
-            preferredStyle: .alert
+            positiveButtonText: "Ayarları Aç",
+            positiveButtonClickListener: {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                }
+            },
+            negativeButtonText: "İptal"
         )
-
-        alert.addAction(UIAlertAction(title: "Ayarları Aç", style: .default) { _ in
-            if let url = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(url, options: [:], completionHandler: nil)
-            }
-        })
-
-        alert.addAction(UIAlertAction(title: "İptal", style: .cancel, handler: nil))
-        
-        present(alert, animated: true)
     }
 }
 
@@ -185,33 +178,18 @@ private extension HomeViewController {
     }
 }
 
-// MARK: Show Address
+// MARK: Fetch Address
 private extension HomeViewController {
     
     func fetchAddress(for coordinate: CLLocationCoordinate2D) {
-        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        
-        geocoder.reverseGeocodeLocation(location) { [weak self] (placemarks, error) in
-            guard let self = self, error == nil, let placemark = placemarks?.first else {
-                self?.showAddressAlert(address: "Adres bulunamadı.")
-                return
-            }
-            
-            let address = """
-            \(placemark.name ?? ""),
-            \(placemark.locality ?? ""),
-            \(placemark.administrativeArea ?? ""),
-            \(placemark.country ?? "")
-            """
-            
-            self.showAddressAlert(address: address)
+        let geocoder = CLGeocoder()
+        geocoder.reverseGeocodeLocation(
+            CLLocation(latitude: coordinate.latitude,
+                       longitude: coordinate.longitude)) { [weak self] placemarks, error in
+                           
+                           let address = placemarks?.first.map { "\($0.name ?? ""), \($0.locality ?? ""), \($0.administrativeArea ?? ""), \($0.country ?? "")" } ?? "Adres Bulunamadı"
+                           self?.showSystemAlert(title: "Adres Bilgisi", message: address)
         }
-    }
-
-    func showAddressAlert(address: String) {
-        let alert = UIAlertController(title: "Adres Bilgisi", message: address, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Tamam", style: .default))
-        present(alert, animated: true)
     }
 }
 

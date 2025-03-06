@@ -24,10 +24,10 @@ protocol IHomeViewModel {
     func generateRouteFromCurrentLocation(to fixedLocation: LMLocation)
 }
 
-final class HomeViewModel: IHomeViewModel {
+final class HomeViewModel: BaseViewModel, IHomeViewModel {
     
     private let locationUseCase: ILocationUseCase
-    private let routeUseCase: IRouteUseCase
+    private let routeUIModel: IRouteUIModel
     private var cancellables = Set<AnyCancellable>()
     
     private(set) var currentLocationSubject = CurrentLocationSubject()
@@ -35,12 +35,18 @@ final class HomeViewModel: IHomeViewModel {
     private(set) var isTrackingActive: Bool = false
 
     init(locationUseCase: ILocationUseCase,
-         routeUseCase: IRouteUseCase) {
+         routeUIModel: IRouteUIModel) {
         self.locationUseCase = locationUseCase
-        self.routeUseCase = routeUseCase
-        observeLocation()
-    }
+        self.routeUIModel = routeUIModel
+        super.init()
 
+        self.observeLocation()
+    }
+}
+
+// MARK: LocationUseCase
+extension HomeViewModel {
+    
     private func observeLocation() {
         locationUseCase.locationPublisher
             .receive(on: DispatchQueue.main)
@@ -50,10 +56,6 @@ final class HomeViewModel: IHomeViewModel {
             }
             .store(in: &cancellables)
     }
-}
-
-// MARK: LocationUseCase
-extension HomeViewModel {
 
     func requestLocationPermission(completion: @escaping (Bool) -> Void) {
         locationUseCase.requestLocationPermission { isGranted in
@@ -84,6 +86,15 @@ extension HomeViewModel {
 // MARK: RouteUseCase
 extension HomeViewModel {
     
+    private func executeRouteGeneration(from source: LMLocation, to destination: LMLocation) {
+        routeUIModel.generateRoute(from: source, to: destination)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] route in
+                self?.currentRouteSubject.send(route)
+            }
+            .store(in: &cancellables)
+    }
+    
     private func clearRoute() {
         currentRouteSubject.send(nil)
     }
@@ -97,14 +108,4 @@ extension HomeViewModel {
         guard let fixedLocation = locationUseCase.getLastSavedFixedLocation(), isTrackingActive else { return }
         executeRouteGeneration(from: location, to: fixedLocation)
     }
-
-    private func executeRouteGeneration(from source: LMLocation, to destination: LMLocation) {
-        routeUseCase.generateRoute(from: source, to: destination)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] route in
-                self?.currentRouteSubject.send(route)
-            }
-            .store(in: &cancellables)
-    }
 }
-

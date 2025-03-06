@@ -20,10 +20,10 @@ enum HomeViewBuilder {
         let locationUseCase = LocationUseCase(locationManager: locationManager,
                                               locationEntityCoreDataManager: locationEntityCoreDataManager)
         
-        let routeUseCase = RouteUseCase()
+        let routeUIModel = RouteUIModel()
         
         let viewModel = HomeViewModel(locationUseCase: locationUseCase,
-                                      routeUseCase: routeUseCase)
+                                      routeUIModel: routeUIModel)
         
         let viewController = HomeViewController(viewModel: viewModel)
         
