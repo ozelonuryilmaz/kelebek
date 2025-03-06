@@ -13,7 +13,7 @@ typealias LocationPublisher = AnyPublisher<CLLocation, Never>
 
 protocol ILocationManager {
     var locationPublisher: LocationPublisher { get }
-    func requestPermission()
+    func requestPermission(completion: @escaping (Bool) -> Void)
     func startUpdatingLocation()
     func stopUpdatingLocation()
 }
@@ -25,7 +25,8 @@ final class LocationManager: NSObject, ILocationManager {
     private let locationDistance = CLLocationDistance(100)
     private var backgroundTaskID: UIBackgroundTaskIdentifier = UIBackgroundTaskIdentifier.invalid
     private var lastSentLocation: CLLocation? = nil
-    
+    private var permissionCompletion: ((Bool) -> Void)?
+
     internal var locationPublisher: LocationPublisher {
         locationSubject.eraseToAnyPublisher()
     }
@@ -47,8 +48,18 @@ final class LocationManager: NSObject, ILocationManager {
 // MARK: Permission & Location
 extension LocationManager {
    
-    func requestPermission() {
-        locationManager.requestAlwaysAuthorization()
+    func requestPermission(completion: @escaping (Bool) -> Void) {
+        self.permissionCompletion = completion
+        let status = locationManager.authorizationStatus
+        
+        switch status {
+        case .notDetermined:
+            locationManager.requestAlwaysAuthorization()
+        case .authorizedAlways, .authorizedWhenInUse:
+            completion(true)
+        default:
+            completion(false)
+        }
     }
     
     func startUpdatingLocation() {
@@ -84,6 +95,12 @@ extension LocationManager: CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        if let completion = permissionCompletion {
+            let isGranted = (status == .authorizedAlways || status == .authorizedWhenInUse)
+            completion(isGranted)
+            permissionCompletion = nil
+        }
+        
         switch status {
         case .authorizedAlways, .authorizedWhenInUse:
             print("konum izni verildi")

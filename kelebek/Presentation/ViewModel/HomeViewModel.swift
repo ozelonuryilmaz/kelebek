@@ -8,17 +8,21 @@
 import Foundation
 import CoreLocation
 import Combine
+import MapKit
 
 typealias CurrentLocationSubject = PassthroughSubject<CLLocation?, Never>
-typealias IsTrackingActiveSubject = PassthroughSubject<Bool, Never>
+typealias CurrentRouteSubject = PassthroughSubject<MKPolyline?, Never>
 
 protocol IHomeViewModel {
     var currentLocationSubject: CurrentLocationSubject { get }
-    var isTrackingActiveSubject: IsTrackingActiveSubject { get }
+    var currentRouteSubject: CurrentRouteSubject { get }
+    var isTrackingActive: Bool { get }
     
-    func requestLocationPermission()
+    func requestLocationPermission(completion: @escaping (Bool) -> Void)
     func startTracking()
     func stopTracking()
+    
+    func updateFixedLocation(_ location: CLLocation)
     func resetRoute()
 }
 
@@ -28,26 +32,20 @@ final class HomeViewModel: IHomeViewModel {
     private var cancellables = Set<AnyCancellable>()
     
     private(set) var currentLocationSubject = CurrentLocationSubject()
-    private(set) var isTrackingActiveSubject = IsTrackingActiveSubject()
+    private(set) var currentRouteSubject = CurrentRouteSubject()
+    private(set) var isTrackingActive: Bool = false
 
     init(locationUseCase: ILocationUseCase) {
         self.locationUseCase = locationUseCase
-
-        //loadLastSavedLocation()
         observeLocation()
     }
-    
-    private func loadLastSavedLocation() {
-        if let savedLocation = locationUseCase.getLastSavedLocation() {
-            currentLocationSubject.send(savedLocation)
-        }
-    }
-    
+
     private func observeLocation() {
         locationUseCase.locationPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] location in
                 self?.currentLocationSubject.send(location)
+                self?.checkAndGenerateRoute(from: location)
             }
             .store(in: &cancellables)
     }
@@ -55,23 +53,50 @@ final class HomeViewModel: IHomeViewModel {
 
 // MARK: LocationUseCase
 extension HomeViewModel {
-    
-    func requestLocationPermission() {
-        locationUseCase.requestLocationPermission()
+
+    func requestLocationPermission(completion: @escaping (Bool) -> Void) {
+        locationUseCase.requestLocationPermission { isGranted in
+            completion(isGranted)
+        }
     }
     
     func startTracking() {
         locationUseCase.startTracking()
-        isTrackingActiveSubject.send(true)
+        isTrackingActive = true
     }
     
     func stopTracking() {
         locationUseCase.stopTracking()
-        isTrackingActiveSubject.send(false)
+        isTrackingActive = false
+    }
+}
+
+// MARK: Route
+extension HomeViewModel {
+    
+    func updateFixedLocation(_ location: CLLocation) {
+        locationUseCase.saveFixedLocation(location)
     }
     
     func resetRoute() {
-        locationUseCase.clearAllLocations()
-        currentLocationSubject.send(nil)
+        locationUseCase.clearAllFixedLocations()
+    }
+    
+    private func checkAndGenerateRoute(from location: CLLocation) {
+        guard let fixedLocation = locationUseCase.getLastSavedFixedLocation() else { return }
+        generateRoute(from: location, to: fixedLocation)
+    }
+
+    private func generateRoute(from userLocation: CLLocation, to fixedLocation: CLLocation) {
+        let request = MKDirections.Request()
+        request.source = MKMapItem(placemark: MKPlacemark(coordinate: userLocation.coordinate))
+        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: fixedLocation.coordinate))
+        request.transportType = .automobile
+
+        let directions = MKDirections(request: request)
+        directions.calculate { [weak self] response, error in
+            guard let self = self, let route = response?.routes.first else { return }
+            self.currentRouteSubject.send(route.polyline)
+        }
     }
 }

@@ -11,12 +11,16 @@ import Combine
 
 protocol ILocationUseCase {
     var locationPublisher: LocationPublisher { get }
-    func requestLocationPermission()
+    
+    // LocationManager
+    func requestLocationPermission(completion: @escaping (Bool) -> Void)
     func startTracking()
     func stopTracking()
-    func saveLocation(_ location : CLLocation)
-    func getLastSavedLocation() -> CLLocation?
-    func clearAllLocations()
+    
+    // CoreData
+    func saveFixedLocation(_ location : CLLocation)
+    func getLastSavedFixedLocation() -> CLLocation?
+    func clearAllFixedLocations()
 }
 
 final class LocationUseCase: ILocationUseCase {
@@ -24,7 +28,7 @@ final class LocationUseCase: ILocationUseCase {
     private let locationManager: ILocationManager
     private let locationEntityCoreDataManager: ILocationEntityCoreDataManager
     private var cancellables = Set<AnyCancellable>()
-    
+
     internal var locationPublisher: LocationPublisher {
         return locationManager.locationPublisher
     }
@@ -33,26 +37,14 @@ final class LocationUseCase: ILocationUseCase {
          locationEntityCoreDataManager: ILocationEntityCoreDataManager) {
         self.locationManager = locationManager
         self.locationEntityCoreDataManager = locationEntityCoreDataManager
-        
-        setupBindings()
-    }
-    
-    private func setupBindings() {
-        locationPublisher
-            .receive(on: DispatchQueue.global(qos: .background))
-            .sink { [weak self] location in
-                self?.clearAllLocations()
-                self?.saveLocation(location)
-            }
-            .store(in: &cancellables)
     }
 }
 
 // MARK: LocationManager
 extension LocationUseCase {
     
-    func requestLocationPermission() {
-        locationManager.requestPermission()
+    func requestLocationPermission(completion: @escaping (Bool) -> Void) {
+        locationManager.requestPermission(completion: completion)
     }
     
     func startTracking() {
@@ -67,17 +59,17 @@ extension LocationUseCase {
 // MARK: CoreData
 extension LocationUseCase {
    
-    func saveLocation(_ location : CLLocation) {
+    func saveFixedLocation(_ location : CLLocation) {
         locationEntityCoreDataManager.insertLocationEntity(lat: location.coordinate.latitude,
                                                            lon: location.coordinate.longitude)
     }
     
-    func getLastSavedLocation() -> CLLocation? {
+    func getLastSavedFixedLocation() -> CLLocation? {
         guard let location = locationEntityCoreDataManager.getLastLocationEntity() else { return nil }
         return CLLocation(latitude: location.lat, longitude: location.lon)
     }
     
-    func clearAllLocations() {
+    func clearAllFixedLocations() {
         locationEntityCoreDataManager.clearAllLocationEntity()
     }
 }
