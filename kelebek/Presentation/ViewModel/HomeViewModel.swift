@@ -7,8 +7,17 @@
 
 import Foundation
 
+protocol HomeViewModelDelegate: AnyObject {
+    func updateMap(with location: LMLocation)
+    func setTrackingButtonTitle(_ title: String)
+    func showLocationPermissionAlert()
+}
+
 protocol IHomeViewModel: LMLocationManagerDelegate {
-    var isTrackingActive: Bool { get }
+    var delegate: HomeViewModelDelegate? { get set }
+    
+    // Actions
+    func onTrackingButtonTapped()
     
     // LocationManager
     func requestLocationPermission()
@@ -21,10 +30,18 @@ protocol IHomeViewModel: LMLocationManagerDelegate {
 }
 
 final class HomeViewModel: BaseViewModel, IHomeViewModel {
+    
+    weak var delegate: HomeViewModelDelegate? = nil
 
+    // MARK: Inject
     private let locationManager: ILocationManager
     private let locationCoreDataManager: ILocationEntityCoreDataManager
-    private(set) var isTrackingActive: Bool = false
+
+    // MARK: Definitions
+    private var isTrackingActive: Bool = false
+    private var trackingButtonTitle: String {
+        return isTrackingActive ? "Konum Takibini Durdur" : "Konum Takibini Başlat"
+    }
 
     init(locationManager: ILocationManager,
          locationCoreDataManager: ILocationEntityCoreDataManager) {
@@ -32,6 +49,20 @@ final class HomeViewModel: BaseViewModel, IHomeViewModel {
         self.locationCoreDataManager = locationCoreDataManager
         super.init()
         self.locationManager.delegate = self
+        self.requestLocationPermission()
+    }
+}
+
+// MARK: Actions
+extension HomeViewModel {
+    
+    func onTrackingButtonTapped() {
+        if isTrackingActive {
+            stopTracking()
+        } else {
+            requestLocationPermission()
+        }
+        delegate?.setTrackingButtonTitle(trackingButtonTitle)
     }
 }
 
@@ -69,10 +100,12 @@ extension HomeViewModel {
 extension HomeViewModel {
     
     func locationManager(didUpdateLocation location: LMLocation) {
-        
+        delegate?.updateMap(with: location)
+        delegate?.setTrackingButtonTitle(trackingButtonTitle)
     }
-    
+
     func locationManager(didChangeAuthorization isGranted: Bool) {
-        
+        if isGranted { self.startTracking() }
+        else { delegate?.showLocationPermissionAlert() }
     }
 }

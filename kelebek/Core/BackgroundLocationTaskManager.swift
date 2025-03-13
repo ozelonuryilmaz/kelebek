@@ -55,9 +55,7 @@ extension BackgroundLocationTaskManager {
     func scheduleBackgroundTask() {
         let taskIdentifier = self.locaitonUpdateTaskIdentifier
         
-        Task { [weak self] in
-            guard let self else { return }
-            
+        Task { 
             let pendingTasks = await BGTaskScheduler.shared.pendingTaskRequests()
             if pendingTasks.contains(where: { $0.identifier == taskIdentifier }) {
                 return

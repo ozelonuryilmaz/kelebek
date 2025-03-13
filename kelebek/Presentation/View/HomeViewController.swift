@@ -18,9 +18,6 @@ final class HomeViewController: KelebekBaseViewController {
     // MARK: Inject
     private let viewModel: IHomeViewModel
 
-    // MARK: Definitions
-    private var currentAnnotation: MKPointAnnotation? = nil
-    
     init(viewModel: IHomeViewModel) {
         self.viewModel = viewModel
         super.init(nibName: String(describing: HomeViewController.self), bundle: nil)
@@ -31,9 +28,9 @@ final class HomeViewController: KelebekBaseViewController {
     }
 
     override func initialComponents() {
+        viewModel.delegate = self
         mapView.delegate = self
         mapView.showsUserLocation = true
-        checkLocationPermissionAndStart()
     }
     
     override func registerEvents() {
@@ -42,33 +39,7 @@ final class HomeViewController: KelebekBaseViewController {
     }
 }
 
-
-// MARK: Annotation
-private extension HomeViewController {
-    
-    func updateMap(with location: LMLocation) {
-        let coordinate = location.coordinate
-        removeAnnotation()
-        addAnnotation(coordinate: coordinate)
-        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
-        mapView.setRegion(region, animated: true)
-    }
-    
-    func removeAnnotation() {
-        if let annotation = currentAnnotation {
-            mapView.removeAnnotation(annotation)
-        }
-    }
-    
-    func addAnnotation(coordinate: CLLocationCoordinate2D) {
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = coordinate
-        mapView.addAnnotation(annotation)
-        currentAnnotation = annotation
-    }
-}
-
-// MARK: Button Actions
+// MARK: Actions
 private extension HomeViewController {
 
     @objc func btnResetRouteTapped() {
@@ -76,27 +47,47 @@ private extension HomeViewController {
     }
 
     @objc func btnTrackingTapped() {
-        if viewModel.isTrackingActive {
-            viewModel.stopTracking()
-        } else {
-            checkLocationPermissionAndStart()
-        }
-        updateTrackingButtonTitle(isTrackingActive: viewModel.isTrackingActive)
+        viewModel.onTrackingButtonTapped()
     }
 }
 
-// MARK: Permission
+
+// MARK: Annotation
+private extension HomeViewController {
+
+    func addAnnotation(coordinate: CLLocationCoordinate2D) {
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = coordinate
+        mapView.addAnnotation(annotation)
+    }
+}
+
+// MARK: Fetch Address
 private extension HomeViewController {
     
-    func checkLocationPermissionAndStart() {
-        viewModel.requestLocationPermission()
-        /* TODO: LMLocationManagerDelegate'deki fonksiyondan tetikle
-         if isGranted {
-             self.viewModel.startTracking()
-         } else {
-             self.showLocationPermissionAlert()
-         }
-         */
+    func fetchAddress(for coordinate: CLLocationCoordinate2D) {
+        let geocoder = CLGeocoder()
+        geocoder.reverseGeocodeLocation(
+            LMLocation(latitude: coordinate.latitude,
+                       longitude: coordinate.longitude)) { [weak self] placemarks, error in
+                           let address = placemarks?.first.map { "\($0.name ?? ""), \($0.locality ?? ""), \($0.administrativeArea ?? ""), \($0.country ?? "")" } ?? "Adres Bulunamadı"
+                           self?.showSystemAlert(title: "Adres Bilgisi", message: address)
+        }
+    }
+}
+
+// MARK: HomeViewModelDelegate
+extension HomeViewController: HomeViewModelDelegate {
+
+    func updateMap(with location: LMLocation) {
+        let coordinate = location.coordinate
+        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
+        mapView.setRegion(region, animated: true)
+        addAnnotation(coordinate: coordinate)
+    }
+
+    func setTrackingButtonTitle(_ title: String) {
+        trackingButton.setTitle(title, for: .normal)
     }
     
     func showLocationPermissionAlert() {
@@ -111,30 +102,6 @@ private extension HomeViewController {
             },
             negativeButtonText: "İptal"
         )
-    }
-}
-
-// MARK: Private Props
-private extension HomeViewController {
-    
-    func updateTrackingButtonTitle(isTrackingActive: Bool) {
-        let title = isTrackingActive ? "Konum Takibini Durdur" : "Konum Takibini Başlat"
-        trackingButton.setTitle(title, for: .normal)
-    }
-}
-
-// MARK: Fetch Address
-private extension HomeViewController {
-    
-    func fetchAddress(for coordinate: CLLocationCoordinate2D) {
-        let geocoder = CLGeocoder()
-        geocoder.reverseGeocodeLocation(
-            LMLocation(latitude: coordinate.latitude,
-                       longitude: coordinate.longitude)) { [weak self] placemarks, error in
-                           
-                           let address = placemarks?.first.map { "\($0.name ?? ""), \($0.locality ?? ""), \($0.administrativeArea ?? ""), \($0.country ?? "")" } ?? "Adres Bulunamadı"
-                           self?.showSystemAlert(title: "Adres Bilgisi", message: address)
-        }
     }
 }
 

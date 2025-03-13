@@ -14,11 +14,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
+        // Register Background Location Task
+        BackgroundLocationTaskManager.shared.registerBackgroundTasks()
+
         // Start App
         self.startApp()
-
-        // Register Background Task
-        BackgroundLocationTaskManager.shared.registerBackgroundTasks()
 
         return true
     }
