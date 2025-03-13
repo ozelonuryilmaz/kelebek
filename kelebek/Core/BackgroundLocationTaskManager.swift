@@ -7,7 +7,7 @@
 
 import BackgroundTasks
 
-protocol IBackgroundLocationTaskManager {
+protocol IBackgroundLocationTaskManager: AnyObject {
     func registerBackgroundTasks()
     func scheduleBackgroundTask()
 }
@@ -16,6 +16,7 @@ final class BackgroundLocationTaskManager: IBackgroundLocationTaskManager {
 
     static let shared: IBackgroundLocationTaskManager = BackgroundLocationTaskManager()
     
+    private lazy var locationManager: ILocationManager? = LocationManager()
     private let locaitonUpdateTaskIdentifier = "com.onuryilmaz.kelebek.backgroundLocationTaskUpdate"
 
     private init() { }
@@ -36,12 +37,12 @@ extension BackgroundLocationTaskManager {
     
     private func handleBackgroundTask(_ task: BGTask) {
         guard let proccessingTask = task as? BGProcessingTask else { return }
-        
-        let locationManager: ILocationManager = LocationManager()
-        locationManager.startUpdatingLocation()
+   
+        locationManager?.startUpdatingLocation()
 
-        proccessingTask.expirationHandler = {
-            locationManager.stopUpdatingLocation()
+        proccessingTask.expirationHandler = { [weak self] in
+            self?.locationManager?.stopUpdatingLocation()
+            self?.locationManager = nil
         }
 
         proccessingTask.setTaskCompleted(success: true)
@@ -63,12 +64,13 @@ extension BackgroundLocationTaskManager {
             }
             
             let request = BGProcessingTaskRequest(identifier: taskIdentifier)
-            request.requiresNetworkConnectivity = false
             request.requiresExternalPower = false
+            request.requiresNetworkConnectivity = false
             request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60) // en az 15 dakika sonra Apple çalıştırır
 
             do {
                 try BGTaskScheduler.shared.submit(request)
+                print("Background Task Başarılı")
             } catch {
                 print("Background Task Hatası: \(error)")
             }

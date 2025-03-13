@@ -12,7 +12,7 @@ enum CoreDataModel: String {
     case kelebek = "Kelebekapp"
 }
 
-protocol ICoreDataHelper {
+protocol ICoreDataHelper: AnyObject {
     var viewContext: NSManagedObjectContext { get }
     func saveContext()
     func getManagedContextWithMergePolicy() -> NSManagedObjectContext

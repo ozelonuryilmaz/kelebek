@@ -7,31 +7,35 @@
 
 import Foundation
 
-protocol IHomeViewModel {
+protocol IHomeViewModel: LMLocationManagerDelegate {
     var isTrackingActive: Bool { get }
     
-    // LocationUseCase
+    // LocationManager
     func requestLocationPermission()
     func startTracking()
     func stopTracking()
     
-    // Repository
+    // CoreDataManager
     func updateFixedLocation(_ location: LMLocation)
     func clearAllFixedLocations()
 }
 
 final class HomeViewModel: BaseViewModel, IHomeViewModel {
-    
+
     private let locationManager: ILocationManager
+    private let locationCoreDataManager: ILocationEntityCoreDataManager
     private(set) var isTrackingActive: Bool = false
 
-    init(locationManager: ILocationManager) {
+    init(locationManager: ILocationManager,
+         locationCoreDataManager: ILocationEntityCoreDataManager) {
         self.locationManager = locationManager
+        self.locationCoreDataManager = locationCoreDataManager
         super.init()
+        self.locationManager.delegate = self
     }
 }
 
-// MARK: LocationUseCase
+// MARK: LocationManager
 extension HomeViewModel {
     
     func requestLocationPermission() {
@@ -49,14 +53,26 @@ extension HomeViewModel {
     }
 }
 
-// MARK: Repository
+// MARK: CoreDataManager
 extension HomeViewModel {
     
     func updateFixedLocation(_ location: LMLocation) {
-        
+        locationCoreDataManager.insertLocationEntity(location)
     }
     
     func clearAllFixedLocations() {
+        locationCoreDataManager.clearAllLocationEntity()
+    }
+}
+
+// MARK: LMLocationManagerDelegate
+extension HomeViewModel {
+    
+    func locationManager(didUpdateLocation location: LMLocation) {
+        
+    }
+    
+    func locationManager(didChangeAuthorization isGranted: Bool) {
         
     }
 }

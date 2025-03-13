@@ -9,13 +9,13 @@ import CoreLocation
 
 typealias LMLocation = CLLocation
 
-protocol LocationManagerDelegate: AnyObject {
+protocol LMLocationManagerDelegate: AnyObject {
     func locationManager(didUpdateLocation location: LMLocation)
     func locationManager(didChangeAuthorization isGranted: Bool)
 }
 
-protocol ILocationManager {
-    var delegate: LocationManagerDelegate? { get set }
+protocol ILocationManager: AnyObject {
+    var delegate: LMLocationManagerDelegate? { get set }
 
     func requestPermission()
     func startUpdatingLocation()
@@ -24,7 +24,7 @@ protocol ILocationManager {
 
 final class LocationManager: NSObject, ILocationManager {
 
-    weak var delegate: LocationManagerDelegate? = nil
+    weak var delegate: LMLocationManagerDelegate? = nil
     
     private let locationManager = CLLocationManager()
     private let locationDistance = CLLocationDistance(100)

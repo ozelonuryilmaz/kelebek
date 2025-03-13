@@ -8,6 +8,10 @@
     <string>Konumunuzu takip ederek haritada görüntüler.</string>
     <key>NSLocationAlwaysUsageDescription</key>
     <string>Arka planda konumunuzu kaydederek rota oluşturur.</string>
+    <key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>com.onuryilmaz.kelebek.backgroundLocationTaskUpdate</string>
+    </array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>

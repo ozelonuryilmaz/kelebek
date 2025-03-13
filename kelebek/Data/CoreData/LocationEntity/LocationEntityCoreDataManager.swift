@@ -13,7 +13,7 @@ protocol ILocationEntityCoreDataManager: AnyObject {
     func getLastLocationEntity() -> LocationEntity?
     
     @discardableResult
-    func insertLocationEntity(model: LocationModel) -> Bool
+    func insertLocationEntity(_ location: LMLocation) -> Bool
     
     @discardableResult
     func clearAllLocationEntity() -> Bool
@@ -33,10 +33,10 @@ class LocationEntityCoreDataManager: BaseCoreDataManager<LocationEntity>, ILocat
     }
 
     @discardableResult
-    func insertLocationEntity(model: LocationModel) -> Bool {
+    func insertLocationEntity(_ location: LMLocation) -> Bool {
         let newLocationEntity = LocationEntity(context: managedContext)
-        newLocationEntity.lat = model.lat
-        newLocationEntity.lon = model.lon
+        newLocationEntity.lat = location.coordinate.latitude
+        newLocationEntity.lon = location.coordinate.longitude
         newLocationEntity.date = Date()
         
         return saveContext()

@@ -90,7 +90,7 @@ private extension HomeViewController {
     
     func checkLocationPermissionAndStart() {
         viewModel.requestLocationPermission()
-        /* TODO: LocationManagerDelegate'deki fonksiyondan tetikle
+        /* TODO: LMLocationManagerDelegate'deki fonksiyondan tetikle
          if isGranted {
              self.viewModel.startTracking()
          } else {
