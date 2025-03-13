@@ -43,7 +43,7 @@ final class HomeViewController: KelebekBaseViewController {
 private extension HomeViewController {
 
     @objc func btnResetRouteTapped() {
-        viewModel.clearAllFixedLocations()
+        viewModel.onResetRouteButtonTapped()
     }
 
     @objc func btnTrackingTapped() {
@@ -59,6 +59,11 @@ private extension HomeViewController {
         let annotation = MKPointAnnotation()
         annotation.coordinate = coordinate
         mapView.addAnnotation(annotation)
+    }
+    
+    func setRegion(coordinate: CLLocationCoordinate2D) {
+        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
+        mapView.setRegion(region, animated: true)
     }
 }
 
@@ -81,9 +86,12 @@ extension HomeViewController: HomeViewModelDelegate {
 
     func updateMap(with location: LMLocation) {
         let coordinate = location.coordinate
-        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
-        mapView.setRegion(region, animated: true)
         addAnnotation(coordinate: coordinate)
+        setRegion(coordinate: coordinate)
+    }
+    
+    func removeAllAnnotation() {
+        mapView.removeAnnotations(mapView.annotations)
     }
 
     func setTrackingButtonTitle(_ title: String) {

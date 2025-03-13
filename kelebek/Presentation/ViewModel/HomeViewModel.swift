@@ -9,24 +9,17 @@ import Foundation
 
 protocol HomeViewModelDelegate: AnyObject {
     func updateMap(with location: LMLocation)
+    func removeAllAnnotation()
     func setTrackingButtonTitle(_ title: String)
     func showLocationPermissionAlert()
 }
 
 protocol IHomeViewModel: LMLocationManagerDelegate {
     var delegate: HomeViewModelDelegate? { get set }
-    
+
     // Actions
     func onTrackingButtonTapped()
-    
-    // LocationManager
-    func requestLocationPermission()
-    func startTracking()
-    func stopTracking()
-    
-    // CoreDataManager
-    func updateFixedLocation(_ location: LMLocation)
-    func clearAllFixedLocations()
+    func onResetRouteButtonTapped()
 }
 
 final class HomeViewModel: BaseViewModel, IHomeViewModel {
@@ -57,17 +50,19 @@ final class HomeViewModel: BaseViewModel, IHomeViewModel {
 extension HomeViewModel {
     
     func onTrackingButtonTapped() {
-        if isTrackingActive {
-            stopTracking()
-        } else {
-            requestLocationPermission()
-        }
+        if isTrackingActive { stopTracking() }
+        else { requestLocationPermission() }
         delegate?.setTrackingButtonTitle(trackingButtonTitle)
+    }
+    
+    func onResetRouteButtonTapped() {
+        self.clearAllFixedLocations()
+        self.delegate?.removeAllAnnotation()
     }
 }
 
 // MARK: LocationManager
-extension HomeViewModel {
+private extension HomeViewModel {
     
     func requestLocationPermission() {
         locationManager.requestPermission()
@@ -85,7 +80,7 @@ extension HomeViewModel {
 }
 
 // MARK: CoreDataManager
-extension HomeViewModel {
+private extension HomeViewModel {
     
     func updateFixedLocation(_ location: LMLocation) {
         locationCoreDataManager.insertLocationEntity(location)
