@@ -9,13 +9,16 @@ import Foundation
 
 protocol HomeViewModelDelegate: AnyObject {
     func updateMap(with location: LMLocation)
-    func removeAllAnnotation()
+    func removeAllAnnotations()
     func setTrackingButtonTitle(_ title: String)
     func showLocationPermissionAlert()
+    func loadSavedAnnotations(_ locations: [LocationModel])
 }
 
 protocol IHomeViewModel: LMLocationManagerDelegate {
     var delegate: HomeViewModelDelegate? { get set }
+    
+    func setupLocationManager()
 
     // Actions
     func onTrackingButtonTapped()
@@ -41,8 +44,12 @@ final class HomeViewModel: BaseViewModel, IHomeViewModel {
         self.locationManager = locationManager
         self.locationCoreDataManager = locationCoreDataManager
         super.init()
+    }
+    
+    internal func setupLocationManager() {
         self.locationManager.delegate = self
         self.requestLocationPermission()
+        self.loadSavedLocations()
     }
 }
 
@@ -56,8 +63,8 @@ extension HomeViewModel {
     }
     
     func onResetRouteButtonTapped() {
-        self.clearAllFixedLocations()
-        self.delegate?.removeAllAnnotation()
+        self.clearAllLocations()
+        self.delegate?.removeAllAnnotations()
     }
 }
 
@@ -81,12 +88,21 @@ private extension HomeViewModel {
 
 // MARK: CoreDataManager
 private extension HomeViewModel {
+
+    func loadSavedLocations() {
+        let savedLocations = getAllLocations()
+        delegate?.loadSavedAnnotations(savedLocations)
+    }
+
+    func getAllLocations() -> [LocationModel] {
+        locationCoreDataManager.getAllLocationsEntity()
+    }
     
-    func updateFixedLocation(_ location: LMLocation) {
+    func insertLocation(_ location: LMLocation) {
         locationCoreDataManager.insertLocationEntity(location)
     }
     
-    func clearAllFixedLocations() {
+    func clearAllLocations() {
         locationCoreDataManager.clearAllLocationEntity()
     }
 }
@@ -95,6 +111,7 @@ private extension HomeViewModel {
 extension HomeViewModel {
     
     func locationManager(didUpdateLocation location: LMLocation) {
+        insertLocation(location)
         delegate?.updateMap(with: location)
         delegate?.setTrackingButtonTitle(trackingButtonTitle)
     }

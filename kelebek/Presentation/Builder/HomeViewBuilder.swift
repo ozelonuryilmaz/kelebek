@@ -15,10 +15,10 @@ enum HomeViewBuilder {
         
         let coreDataHelper = CoreDataHelper()
         let managedContext = coreDataHelper.getManagedContextWithMergePolicy()
-        let locationEntityCoreDataManager: ILocationEntityCoreDataManager = LocationEntityCoreDataManager(managedContext: managedContext)
+        let locationCoreDataManager: ILocationEntityCoreDataManager = LocationEntityCoreDataManager(managedContext: managedContext)
 
         let viewModel: IHomeViewModel = HomeViewModel(locationManager: locationManager,
-                                                      locationCoreDataManager: locationEntityCoreDataManager)
+                                                      locationCoreDataManager: locationCoreDataManager)
         
         let viewController = HomeViewController(viewModel: viewModel)
         

@@ -28,9 +28,10 @@ final class HomeViewController: KelebekBaseViewController {
     }
 
     override func initialComponents() {
-        viewModel.delegate = self
-        mapView.delegate = self
         mapView.showsUserLocation = true
+        mapView.delegate = self
+        viewModel.delegate = self
+        viewModel.setupLocationManager()
     }
     
     override func registerEvents() {
@@ -51,32 +52,21 @@ private extension HomeViewController {
     }
 }
 
-
 // MARK: Annotation
 private extension HomeViewController {
 
     func addAnnotation(coordinate: CLLocationCoordinate2D) {
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = coordinate
-        mapView.addAnnotation(annotation)
+        DispatchQueue.main.async { [weak self] in
+            let annotation = MKPointAnnotation()
+            annotation.coordinate = coordinate
+            self?.mapView.addAnnotation(annotation)
+        }
     }
     
     func setRegion(coordinate: CLLocationCoordinate2D) {
-        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
-        mapView.setRegion(region, animated: true)
-    }
-}
-
-// MARK: Fetch Address
-private extension HomeViewController {
-    
-    func fetchAddress(for coordinate: CLLocationCoordinate2D) {
-        let geocoder = CLGeocoder()
-        geocoder.reverseGeocodeLocation(
-            LMLocation(latitude: coordinate.latitude,
-                       longitude: coordinate.longitude)) { [weak self] placemarks, error in
-                           let address = placemarks?.first.map { "\($0.name ?? ""), \($0.locality ?? ""), \($0.administrativeArea ?? ""), \($0.country ?? "")" } ?? "Adres Bulunamadı"
-                           self?.showSystemAlert(title: "Adres Bilgisi", message: address)
+        DispatchQueue.main.async { [weak self] in
+            let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
+            self?.mapView.setRegion(region, animated: true)
         }
     }
 }
@@ -90,7 +80,7 @@ extension HomeViewController: HomeViewModelDelegate {
         setRegion(coordinate: coordinate)
     }
     
-    func removeAllAnnotation() {
+    func removeAllAnnotations() {
         mapView.removeAnnotations(mapView.annotations)
     }
 
@@ -111,6 +101,20 @@ extension HomeViewController: HomeViewModelDelegate {
             negativeButtonText: "İptal"
         )
     }
+    
+    func loadSavedAnnotations(_ locations: [LocationModel]) {
+        DispatchQueue.main.async { [weak self] in
+            // TODO: 500+ Annotions'da ClusterAnnotation düzenlenmesi gerekecek
+            let annotations = locations.map { model -> MKPointAnnotation in
+                let annotation = MKPointAnnotation()
+                let coordinate = model.location.coordinate
+                annotation.coordinate = CLLocationCoordinate2D(latitude: coordinate.latitude,
+                                                               longitude: coordinate.longitude)
+                return annotation
+            }
+            self?.mapView.addAnnotations(annotations)
+        }
+    }
 }
 
 // MARK: MKMapViewDelegate
@@ -119,5 +123,19 @@ extension HomeViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         guard let annotation = view.annotation else { return }
         fetchAddress(for: annotation.coordinate)
+    }
+}
+
+// MARK: Geocoder
+private extension HomeViewController {
+    
+    func fetchAddress(for coordinate: CLLocationCoordinate2D) {
+        let geocoder = CLGeocoder()
+        geocoder.reverseGeocodeLocation(
+            LMLocation(latitude: coordinate.latitude,
+                       longitude: coordinate.longitude)) { [weak self] placemarks, error in
+                           let address = placemarks?.first.map { "\($0.name ?? ""), \($0.locality ?? ""), \($0.administrativeArea ?? ""), \($0.country ?? "")" } ?? "Adres Bulunamadı"
+                           self?.showSystemAlert(title: "Adres Bilgisi", message: address)
+        }
     }
 }

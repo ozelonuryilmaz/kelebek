@@ -22,3 +22,10 @@ public class LocationEntity: NSManagedObject {
 extension LocationEntity : Identifiable {
 
 }
+
+extension LocationEntity {
+
+    func toModel() -> LocationModel {
+        return LocationModel(location: LMLocation(latitude: self.lat, longitude: self.lon))
+    }
+}

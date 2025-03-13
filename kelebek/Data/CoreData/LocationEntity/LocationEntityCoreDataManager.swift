@@ -10,7 +10,7 @@ import CoreData
 
 protocol ILocationEntityCoreDataManager: AnyObject {
 
-    func getLastLocationEntity() -> LocationEntity?
+    func getAllLocationsEntity() -> [LocationModel]
     
     @discardableResult
     func insertLocationEntity(_ location: LMLocation) -> Bool
@@ -21,14 +21,14 @@ protocol ILocationEntityCoreDataManager: AnyObject {
 
 class LocationEntityCoreDataManager: BaseCoreDataManager<LocationEntity>, ILocationEntityCoreDataManager {
 
-    func getLastLocationEntity() -> LocationEntity? {
+    func getAllLocationsEntity() -> [LocationModel] {
         let fetchRequest: NSFetchRequest<LocationEntity> = LocationEntity.fetchRequest()
-        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
-        fetchRequest.fetchLimit = 1
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "date", ascending: true)]
+
         do {
-            return try managedContext.fetch(fetchRequest).first
+            return try managedContext.fetch(fetchRequest).map { $0.toModel() }
         } catch {
-            return nil
+            return []
         }
     }
 
