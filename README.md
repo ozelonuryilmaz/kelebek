@@ -1,17 +1,20 @@
 # KelebekApp – iOS Konum Takip ve Rota Uygulaması
 
-KelebekApp, **kullanıcının konumunu 100 metre aralıklarla takip eden, belirlenen sabit konuma rota oluşturan ve arka planda çalışabilen bir iOS uygulamasıdır**.  
-Bu proje, **UIKit, MapKit, CoreLocation, Combine ve Core Data** kullanılarak geliştirilmiş olup, **MVVM + UseCase + Dependency Injection** mimarisiyle oluşturulmuştur.
+KelebekApp, **kullanıcının konumunu izleyen, 100 metre aralıklarla marker ekleyen ve arka planda çalışabilen bir iOS uygulamasıdır**.  
+Bu proje, **UIKit, MapKit, CoreLocation ve Core Data** kullanılarak geliştirilmiş olup, **MVVM mimarisi** ile yapılandırılmıştır.
 
 ---
 
 ## ✨ Özellikler
 
-- ✅ **100m hareketle konum güncelleme**
-- ✅ **Mevcut konumdan sabit konuma rota oluşturma**
-- ✅ **Rota sıfırlama ve kaydedilmiş rota ile devam etme**
-- ✅ **Arka planda konum takibi ve enerji optimizasyonu**
-- ✅ **MVVM + UseCase + Dependency Injection ile modüler yapı**
+- ✅ **100m hareketle konum güncelleme ve haritaya otomatik marker ekleme**
+- ✅ **Arka planda ve ön planda sürekli konum izleme**
+- ✅ **Haritadaki marker’lara tıklayarak adres bilgisini görüntüleme**
+- ✅ **Konum takibini başlatma/durdurma özelliği**
+- ✅ **Rota sıfırlama ile tüm Marker'ları kaldırma**
 - ✅ **Core Data ile kalıcı veri saklama**
+- ✅ **UIKit + MVVM ile modüler yapı**
+- ✅ **Apple Haritalar entegrasyonu**
+- ✅ **Git ile sürüm kontrolü ve temiz commit geçmişi**
 
 ---
