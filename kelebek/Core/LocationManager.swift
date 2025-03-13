@@ -23,7 +23,7 @@ protocol ILocationManager {
 }
 
 final class LocationManager: NSObject, ILocationManager {
-        
+
     weak var delegate: LocationManagerDelegate? = nil
     
     private let locationManager = CLLocationManager()
@@ -33,7 +33,7 @@ final class LocationManager: NSObject, ILocationManager {
         super.init()
         self.initLocationManager()
     }
-    
+
     private func initLocationManager() {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
@@ -47,9 +47,7 @@ final class LocationManager: NSObject, ILocationManager {
 extension LocationManager {
    
     func requestPermission() {
-        let status = locationManager.authorizationStatus
-        
-        switch status {
+        switch locationManager.authorizationStatus {
         case .notDetermined:
             locationManager.requestAlwaysAuthorization()
         case .authorizedAlways, .authorizedWhenInUse:
@@ -61,6 +59,7 @@ extension LocationManager {
     
     func startUpdatingLocation() {
         locationManager.startUpdatingLocation()
+        BackgroundLocationTaskManager.shared.scheduleBackgroundTask()
     }
     
     func stopUpdatingLocation() {
@@ -74,6 +73,7 @@ extension LocationManager: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [LMLocation]) {
         guard let latestLocation = locations.last else { return }
         delegate?.locationManager(didUpdateLocation: latestLocation)
+        BackgroundLocationTaskManager.shared.scheduleBackgroundTask()
     }
     
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
