@@ -6,20 +6,19 @@
 //
 
 import Foundation
-import CoreLocation
 import MapKit
 import Combine
 
-typealias CurrentLocationSubject = PassthroughSubject<CLLocation?, Never>
+typealias CurrentLocationSubject = PassthroughSubject<LMLocation?, Never>
 typealias CurrentRouteSubject = PassthroughSubject<MKPolyline?, Never>
 
 protocol IRouteUIModel {
-    func generateRoute(from userLocation: CLLocation, to fixedLocation: CLLocation) -> AnyPublisher<MKPolyline?, Never>
+    func generateRoute(from userLocation: LMLocation, to fixedLocation: LMLocation) -> AnyPublisher<MKPolyline?, Never>
 }
 
 struct RouteUIModel: IRouteUIModel {
     
-    func generateRoute(from userLocation: CLLocation, to fixedLocation: CLLocation) -> AnyPublisher<MKPolyline?, Never> {
+    func generateRoute(from userLocation: LMLocation, to fixedLocation: LMLocation) -> AnyPublisher<MKPolyline?, Never> {
         return Future<MKPolyline?, Never> { promise in
             let request = MKDirections.Request()
             request.source = MKMapItem(placemark: MKPlacemark(coordinate: userLocation.coordinate))

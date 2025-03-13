@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CoreLocation
 import Combine
 
 protocol ILocationUseCase {
@@ -16,12 +15,12 @@ protocol ILocationUseCase {
     func requestLocationPermission(completion: @escaping (Bool) -> Void)
     func startTracking()
     func stopTracking()
-    func getLastKnownLocation() -> CLLocation?
+    func getLastKnownLocation() -> LMLocation?
     func clearLastKnownLocation()
     
     // CoreData
-    func saveFixedLocation(_ location : CLLocation)
-    func getLastSavedFixedLocation() -> CLLocation?
+    func saveFixedLocation(_ location : LMLocation)
+    func getLastSavedFixedLocation() -> LMLocation?
     func clearAllFixedLocations()
 }
 
@@ -57,7 +56,7 @@ extension LocationUseCase {
         locationManager.stopUpdatingLocation()
     }
     
-    func getLastKnownLocation() -> CLLocation? {
+    func getLastKnownLocation() -> LMLocation? {
         return locationManager.lastSentLocation
     }
     
@@ -69,16 +68,16 @@ extension LocationUseCase {
 // MARK: CoreData
 extension LocationUseCase {
    
-    func saveFixedLocation(_ location : CLLocation) {
+    func saveFixedLocation(_ location : LMLocation) {
         locationEntityCoreDataManager.insertLocationEntity(
             model: LocationModel(lat: location.coordinate.latitude,
                                  lon: location.coordinate.longitude)
         )
     }
     
-    func getLastSavedFixedLocation() -> CLLocation? {
+    func getLastSavedFixedLocation() -> LMLocation? {
         guard let location = locationEntityCoreDataManager.getLastLocationEntity() else { return nil }
-        return CLLocation(latitude: location.lat, longitude: location.lon)
+        return LMLocation(latitude: location.lat, longitude: location.lon)
     }
     
     func clearAllFixedLocations() {

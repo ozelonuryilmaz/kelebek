@@ -12,7 +12,7 @@ import UIKit // TODO: UIKit kullanmamalıyım. Düzeltilecek
 import CoreLocation
 import Combine
 
-typealias LocationPublisher = AnyPublisher<CLLocation, Never>
+typealias LocationPublisher = AnyPublisher<LMLocation, Never>
 typealias LMLocation = CLLocation
 
 protocol ILocationManager {
@@ -28,7 +28,7 @@ protocol ILocationManager {
 final class LocationManager: NSObject, ILocationManager {
     
     private let locationManager = CLLocationManager()
-    private let locationSubject = PassthroughSubject<CLLocation, Never>()
+    private let locationSubject = PassthroughSubject<LMLocation, Never>()
     private let locationDistance = CLLocationDistance(100)
 
     private var backgroundTaskID: UIBackgroundTaskIdentifier = UIBackgroundTaskIdentifier.invalid
@@ -76,11 +76,7 @@ extension LocationManager {
     }
     
     func startUpdatingLocation() {
-        if CLLocationManager.significantLocationChangeMonitoringAvailable() {
-            locationManager.startMonitoringSignificantLocationChanges()
-        } else {
-            locationManager.startUpdatingLocation()
-        }
+        locationManager.startUpdatingLocation()
         registerBackgroundTask()
     }
     
@@ -94,7 +90,7 @@ extension LocationManager {
 // MARK: CLLocationManagerDelegate
 extension LocationManager: CLLocationManagerDelegate {
     
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [LMLocation]) {
         guard let latestLocation = locations.last else { return }
 
         if let lastLocation = lastSentLocation {

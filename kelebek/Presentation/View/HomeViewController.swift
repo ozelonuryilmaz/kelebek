@@ -81,7 +81,7 @@ private extension HomeViewController {
 // MARK: Annotation
 private extension HomeViewController {
     
-    func updateMap(with location: CLLocation) {
+    func updateMap(with location: LMLocation) {
         let coordinate = location.coordinate
         removeAnnotation()
         addAnnotation(coordinate: coordinate)
@@ -123,7 +123,7 @@ private extension HomeViewController {
     
     @objc func btnGoToRouteTapped() {
         // Varış noktası dinamik olarak değiştirilebilir.
-        let goAnywhere = CLLocation(latitude: 41.0053, longitude: 28.9770)
+        let goAnywhere = LMLocation(latitude: 41.0053, longitude: 28.9770)
         viewModel.updateFixedLocation(goAnywhere)
         viewModel.generateRouteFromCurrentLocation(to: goAnywhere)
     }
@@ -187,7 +187,7 @@ private extension HomeViewController {
     func fetchAddress(for coordinate: CLLocationCoordinate2D) {
         let geocoder = CLGeocoder()
         geocoder.reverseGeocodeLocation(
-            CLLocation(latitude: coordinate.latitude,
+            LMLocation(latitude: coordinate.latitude,
                        longitude: coordinate.longitude)) { [weak self] placemarks, error in
                            
                            let address = placemarks?.first.map { "\($0.name ?? ""), \($0.locality ?? ""), \($0.administrativeArea ?? ""), \($0.country ?? "")" } ?? "Adres Bulunamadı"
