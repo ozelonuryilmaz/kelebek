@@ -11,24 +11,25 @@ typealias LMLocation = CLLocation
 
 protocol LocationManagerDelegate: AnyObject {
     func locationManager(didUpdateLocation location: LMLocation)
+    func locationManager(didChangeAuthorization isGranted: Bool)
 }
 
 protocol ILocationManager {
-    var lastSentLocation: LMLocation? { get }
+    var delegate: LocationManagerDelegate? { get set }
 
-    func requestPermission(completion: @escaping (Bool) -> Void)
+    func requestPermission()
     func startUpdatingLocation()
     func stopUpdatingLocation()
     func clearLastKnownLocation()
 }
 
 final class LocationManager: NSObject, ILocationManager {
+        
+    weak var delegate: LocationManagerDelegate? = nil
     
     private let locationManager = CLLocationManager()
     private let locationDistance = CLLocationDistance(100)
-    private var permissionCompletion: ((Bool) -> Void)?
-    private(set) var lastSentLocation: LMLocation? = nil
-    weak var delegate: LocationManagerDelegate? = nil
+    private var lastSentLocation: LMLocation? = nil
 
     override init() {
         super.init()
@@ -51,17 +52,16 @@ final class LocationManager: NSObject, ILocationManager {
 // MARK: Permission & Location
 extension LocationManager {
    
-    func requestPermission(completion: @escaping (Bool) -> Void) {
-        self.permissionCompletion = completion
+    func requestPermission() {
         let status = locationManager.authorizationStatus
         
         switch status {
         case .notDetermined:
             locationManager.requestAlwaysAuthorization()
         case .authorizedAlways, .authorizedWhenInUse:
-            completion(true)
+            delegate?.locationManager(didChangeAuthorization: true)
         default:
-            completion(false)
+            delegate?.locationManager(didChangeAuthorization: false)
         }
     }
     
@@ -89,21 +89,7 @@ extension LocationManager: CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-        if let completion = permissionCompletion {
-            let isGranted = (status == .authorizedAlways || status == .authorizedWhenInUse)
-            completion(isGranted)
-            permissionCompletion = nil
-        }
-        
-        switch status {
-        case .authorizedAlways, .authorizedWhenInUse:
-            print("konum izni verildi")
-        case .denied, .restricted:
-            print("konum izni verilmedi")
-        case .notDetermined:
-            print("konum izni henüz verilmedi")
-        default:
-            print("izin durumu bilinmiyor")
-        }
+        let isGranted = status == .authorizedAlways || status == .authorizedWhenInUse
+        delegate?.locationManager(didChangeAuthorization: isGranted)
     }
 }

@@ -8,8 +8,6 @@
 import UIKit
 import MapKit
 
-// MARK: Coordinator, Repository, ViewState, UIModel kullanımı için "https://github.com/ozelonuryilmaz/berkel" Repository kontrole edebilirsiniz
-
 final class HomeViewController: KelebekBaseViewController {
     
     // MARK: IBOutlets
@@ -91,14 +89,14 @@ private extension HomeViewController {
 private extension HomeViewController {
     
     func checkLocationPermissionAndStart() {
-        viewModel.requestLocationPermission { [weak self] isGranted in
-            guard let self else { return }
-            if isGranted {
-                self.viewModel.startTracking()
-            } else {
-                self.showLocationPermissionAlert()
-            }
-        }
+        viewModel.requestLocationPermission()
+        /* TODO: LocationManagerDelegate'deki fonksiyondan tetikle
+         if isGranted {
+             self.viewModel.startTracking()
+         } else {
+             self.showLocationPermissionAlert()
+         }
+         */
     }
     
     func showLocationPermissionAlert() {

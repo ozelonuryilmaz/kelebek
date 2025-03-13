@@ -6,13 +6,12 @@
 //
 
 import Foundation
-import Combine
 
 protocol IHomeViewModel {
     var isTrackingActive: Bool { get }
     
     // LocationUseCase
-    func requestLocationPermission(completion: @escaping (Bool) -> Void)
+    func requestLocationPermission()
     func startTracking()
     func stopTracking()
     
@@ -35,10 +34,8 @@ final class HomeViewModel: BaseViewModel, IHomeViewModel {
 // MARK: LocationUseCase
 extension HomeViewModel {
     
-    func requestLocationPermission(completion: @escaping (Bool) -> Void) {
-        locationManager.requestPermission { isGranted in
-            completion(isGranted)
-        }
+    func requestLocationPermission() {
+        locationManager.requestPermission()
     }
     
     func startTracking() {
@@ -50,8 +47,6 @@ extension HomeViewModel {
         locationManager.stopUpdatingLocation()
         isTrackingActive = false
     }
-
-    
 }
 
 // MARK: Repository
