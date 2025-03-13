@@ -5,18 +5,15 @@
 //  Created by Onur Yılmaz on 4.03.2025.
 //
 
-
-import UIKit // TODO: UIKit kullanmamalıyım. Düzeltilecek
-
-
 import CoreLocation
-import Combine
 
-typealias LocationPublisher = AnyPublisher<LMLocation, Never>
 typealias LMLocation = CLLocation
 
+protocol LocationManagerDelegate: AnyObject {
+    func locationManager(didUpdateLocation location: LMLocation)
+}
+
 protocol ILocationManager {
-    var locationPublisher: LocationPublisher { get }
     var lastSentLocation: LMLocation? { get }
 
     func requestPermission(completion: @escaping (Bool) -> Void)
@@ -28,18 +25,11 @@ protocol ILocationManager {
 final class LocationManager: NSObject, ILocationManager {
     
     private let locationManager = CLLocationManager()
-    private let locationSubject = PassthroughSubject<LMLocation, Never>()
     private let locationDistance = CLLocationDistance(100)
-
-    private var backgroundTaskID: UIBackgroundTaskIdentifier = UIBackgroundTaskIdentifier.invalid
     private var permissionCompletion: ((Bool) -> Void)?
-    
     private(set) var lastSentLocation: LMLocation? = nil
+    weak var delegate: LocationManagerDelegate? = nil
 
-    internal var locationPublisher: LocationPublisher {
-        locationSubject.eraseToAnyPublisher()
-    }
-    
     override init() {
         super.init()
         self.initLocationManager()
@@ -77,13 +67,10 @@ extension LocationManager {
     
     func startUpdatingLocation() {
         locationManager.startUpdatingLocation()
-        registerBackgroundTask()
     }
     
     func stopUpdatingLocation() {
         locationManager.stopUpdatingLocation()
-        locationManager.stopMonitoringSignificantLocationChanges()
-        endBackgroundTask()
     }
 }
 
@@ -93,14 +80,12 @@ extension LocationManager: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [LMLocation]) {
         guard let latestLocation = locations.last else { return }
 
-        if let lastLocation = lastSentLocation {
-            if latestLocation.distance(from: lastLocation) < locationDistance {
-                return
-            }
+        if let lastLocation = lastSentLocation, latestLocation.distance(from: lastLocation) < locationDistance {
+            return
         }
         
         lastSentLocation = latestLocation
-        locationSubject.send(latestLocation)
+        delegate?.locationManager(didUpdateLocation: latestLocation)
     }
     
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
@@ -119,24 +104,6 @@ extension LocationManager: CLLocationManagerDelegate {
             print("konum izni henüz verilmedi")
         default:
             print("izin durumu bilinmiyor")
-        }
-    }
-}
-
-// MARK: Private Background Mode
-private extension LocationManager {
-    
-    func registerBackgroundTask() {
-        backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: "LocationTracking",
-                                                                    expirationHandler: {
-            self.endBackgroundTask()
-        })
-    }
-    
-    func endBackgroundTask() {
-        if backgroundTaskID != .invalid {
-            UIApplication.shared.endBackgroundTask(backgroundTaskID)
-            backgroundTaskID = .invalid
         }
     }
 }

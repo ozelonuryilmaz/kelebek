@@ -7,7 +7,6 @@
 
 import UIKit
 import MapKit
-import Combine
 
 // MARK: Coordinator, Repository, ViewState, UIModel kullanımı için "https://github.com/ozelonuryilmaz/berkel" Repository kontrole edebilirsiniz
 
@@ -16,14 +15,12 @@ final class HomeViewController: KelebekBaseViewController {
     // MARK: IBOutlets
     @IBOutlet private weak var mapView: MKMapView!
     @IBOutlet private weak var trackingButton: UIButton!
-    @IBOutlet private weak var goToRouteButton: UIButton!
     @IBOutlet private weak var resetRouteButton: UIButton!
     
     // MARK: Inject
     private let viewModel: IHomeViewModel
 
     // MARK: Definitions
-    private var cancellables = Set<AnyCancellable>()
     private var currentAnnotation: MKPointAnnotation? = nil
     
     init(viewModel: IHomeViewModel) {
@@ -37,46 +34,16 @@ final class HomeViewController: KelebekBaseViewController {
 
     override func initialComponents() {
         mapView.delegate = self
+        mapView.showsUserLocation = true
         checkLocationPermissionAndStart()
-        observeCurrentLocation()
-        observeCurrentRoute()
     }
     
     override func registerEvents() {
         trackingButton.addTarget(self, action: #selector(self.btnTrackingTapped), for: .touchUpInside)
-        goToRouteButton.addTarget(self, action: #selector(self.btnGoToRouteTapped), for: .touchUpInside)
         resetRouteButton.addTarget(self, action: #selector(self.btnResetRouteTapped), for: .touchUpInside)
     }
 }
 
-// MARK: Observe
-private extension HomeViewController {
-
-    func observeCurrentLocation() {
-        viewModel.currentLocationSubject
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] location in
-                guard let location else { return }
-                self?.updateMap(with: location)
-                self?.updateTrackingButtonTitle(isTrackingActive: true)
-            }
-            .store(in: &cancellables)
-    }
-
-    func observeCurrentRoute() {
-        viewModel.currentRouteSubject
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] route in
-                guard let self else { return }
-                if let route = route {
-                    self.updateRoute(with: route)
-                } else {
-                    self.removeOverlays()
-                }
-            }
-            .store(in: &cancellables)
-    }
-}
 
 // MARK: Annotation
 private extension HomeViewController {
@@ -103,34 +70,11 @@ private extension HomeViewController {
     }
 }
 
-// MARK: Route
-private extension HomeViewController {
-    
-    func updateRoute(with route: MKPolyline) {
-        if let existingOverlay = mapView.overlays.first(where: { $0 is MKPolyline }) {
-            mapView.removeOverlay(existingOverlay)
-        }
-        mapView.addOverlay(route)
-    }
-    
-    func removeOverlays() {
-        mapView.removeOverlays(mapView.overlays)
-    }
-}
-
 // MARK: Button Actions
 private extension HomeViewController {
-    
-    @objc func btnGoToRouteTapped() {
-        // Varış noktası dinamik olarak değiştirilebilir.
-        let goAnywhere = LMLocation(latitude: 41.0053, longitude: 28.9770)
-        viewModel.updateFixedLocation(goAnywhere)
-        viewModel.generateRouteFromCurrentLocation(to: goAnywhere)
-    }
 
     @objc func btnResetRouteTapped() {
         viewModel.clearAllFixedLocations()
-        removeOverlays()
     }
 
     @objc func btnTrackingTapped() {
@@ -199,16 +143,6 @@ private extension HomeViewController {
 // MARK: MKMapViewDelegate
 extension HomeViewController: MKMapViewDelegate {
 
-    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        if let polyline = overlay as? MKPolyline {
-            let renderer = MKPolylineRenderer(polyline: polyline)
-            renderer.strokeColor = .blue
-            renderer.lineWidth = 5
-            return renderer
-        }
-        return MKOverlayRenderer()
-    }
-    
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         guard let annotation = view.annotation else { return }
         fetchAddress(for: annotation.coordinate)

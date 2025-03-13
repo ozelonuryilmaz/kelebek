@@ -11,7 +11,6 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="HomeViewController" customModule="kelebek" customModuleProvider="target">
             <connections>
-                <outlet property="goToRouteButton" destination="1Vx-pK-FQM" id="qYI-VR-LPP"/>
                 <outlet property="mapView" destination="MiU-kv-9um" id="uLv-KV-hKx"/>
                 <outlet property="resetRouteButton" destination="OUF-Pf-Jcr" id="jip-u5-Lm7"/>
                 <outlet property="trackingButton" destination="kiZ-Tp-tCV" id="4pE-fk-Eco"/>
@@ -37,15 +36,6 @@
                     <state key="normal" title="Button"/>
                     <buttonConfiguration key="configuration" style="plain" title="Konum Takibini Başlat"/>
                 </button>
-                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="1Vx-pK-FQM">
-                    <rect key="frame" x="250" y="665" width="127" height="35"/>
-                    <constraints>
-                        <constraint firstAttribute="height" constant="35" id="ETJ-H1-OLa"/>
-                    </constraints>
-                    <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                    <state key="normal" title="Button"/>
-                    <buttonConfiguration key="configuration" style="plain" title="Rota'yı Başlat"/>
-                </button>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="OUF-Pf-Jcr">
                     <rect key="frame" x="244" y="708" width="133" height="35"/>
                     <constraints>
@@ -63,8 +53,6 @@
                 <constraint firstItem="MiU-kv-9um" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="G5J-cJ-Kfb"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="kiZ-Tp-tCV" secondAttribute="trailing" constant="16" id="IcU-FE-wdi"/>
                 <constraint firstItem="MiU-kv-9um" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="MhI-6q-YDc"/>
-                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="1Vx-pK-FQM" secondAttribute="trailing" constant="16" id="RaK-dp-1W1"/>
-                <constraint firstItem="OUF-Pf-Jcr" firstAttribute="top" secondItem="1Vx-pK-FQM" secondAttribute="bottom" constant="8" id="W7F-ej-X25"/>
                 <constraint firstItem="kiZ-Tp-tCV" firstAttribute="top" secondItem="OUF-Pf-Jcr" secondAttribute="bottom" constant="8" id="hbF-89-WHR"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="OUF-Pf-Jcr" secondAttribute="trailing" constant="16" id="ngg-hx-YXc"/>
                 <constraint firstItem="MiU-kv-9um" firstAttribute="trailing" secondItem="vUN-kp-3ea" secondAttribute="trailing" id="pCG-2D-lQe"/>
