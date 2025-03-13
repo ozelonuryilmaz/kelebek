@@ -20,7 +20,6 @@ protocol ILocationManager {
     func requestPermission()
     func startUpdatingLocation()
     func stopUpdatingLocation()
-    func clearLastKnownLocation()
 }
 
 final class LocationManager: NSObject, ILocationManager {
@@ -29,7 +28,6 @@ final class LocationManager: NSObject, ILocationManager {
     
     private let locationManager = CLLocationManager()
     private let locationDistance = CLLocationDistance(100)
-    private var lastSentLocation: LMLocation? = nil
 
     override init() {
         super.init()
@@ -42,10 +40,6 @@ final class LocationManager: NSObject, ILocationManager {
         locationManager.distanceFilter = locationDistance
         locationManager.allowsBackgroundLocationUpdates = true
         locationManager.pausesLocationUpdatesAutomatically = false
-    }
-    
-    internal func clearLastKnownLocation() {
-        self.lastSentLocation = nil
     }
 }
 
@@ -79,12 +73,6 @@ extension LocationManager: CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [LMLocation]) {
         guard let latestLocation = locations.last else { return }
-
-        if let lastLocation = lastSentLocation, latestLocation.distance(from: lastLocation) < locationDistance {
-            return
-        }
-        
-        lastSentLocation = latestLocation
         delegate?.locationManager(didUpdateLocation: latestLocation)
     }
     
