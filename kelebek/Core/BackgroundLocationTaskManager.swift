@@ -17,7 +17,7 @@ final class BackgroundLocationTaskManager: IBackgroundLocationTaskManager {
     static let shared: IBackgroundLocationTaskManager = BackgroundLocationTaskManager()
     
     private lazy var locationManager: ILocationManager? = LocationManager()
-    private let locaitonUpdateTaskIdentifier = "com.onuryilmaz.kelebek.backgroundLocationTaskUpdate"
+    private let locaitonUpdateTaskIdentifier = Constants.BackgroundTaskIdentifier.locaiton
 
     private init() { }
 }

@@ -146,7 +146,7 @@ extension HomeViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         if let polyline = overlay as? MKPolyline {
             let renderer = MKPolylineRenderer(polyline: polyline)
-            renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.8)
+            renderer.strokeColor = .blue
             renderer.lineWidth = 2
             renderer.lineDashPattern = [2, 4]
             return renderer

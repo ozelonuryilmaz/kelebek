@@ -34,6 +34,8 @@ final class HomeViewModel: BaseViewModel, IHomeViewModel {
     // MARK: Inject
     private let locationManager: ILocationManager
     private let locationCoreDataManager: ILocationEntityCoreDataManager
+    private let processRoutesUseCase: IProcessRoutesUseCase
+    private let shouldDrawLineUseCase: IShouldDrawLineUseCase
 
     // MARK: Definitions
     private var lastLocation: LMLocationCoordinate2D? = nil
@@ -43,9 +45,13 @@ final class HomeViewModel: BaseViewModel, IHomeViewModel {
     }
 
     init(locationManager: ILocationManager,
-         locationCoreDataManager: ILocationEntityCoreDataManager) {
+         locationCoreDataManager: ILocationEntityCoreDataManager,
+         processRoutesUseCase: IProcessRoutesUseCase,
+         shouldDrawLineUseCase: IShouldDrawLineUseCase) {
         self.locationManager = locationManager
         self.locationCoreDataManager = locationCoreDataManager
+        self.processRoutesUseCase = processRoutesUseCase
+        self.shouldDrawLineUseCase = shouldDrawLineUseCase
         super.init()
     }
     
@@ -53,31 +59,6 @@ final class HomeViewModel: BaseViewModel, IHomeViewModel {
         self.locationManager.delegate = self
         self.requestLocationPermission()
         self.loadSavedLocations()
-        self.getAllRoutes()
-    }
-    
-    private func loadSavedLocations() {
-        let savedLocations = getAllLocations()
-        lastLocation = savedLocations.last?.location.coordinate
-        delegate?.loadSavedAnnotations(savedLocations)
-    }
-    
-    private func getAllRoutes() {
-        let routes = locationCoreDataManager.getAllRoutes()
-        delegate?.drawRoutes(with: routes)
-    }
-    
-    func addNewLocation(_ newLocation: LMLocationCoordinate2D) {
-        if let lastLocation = lastLocation {
-            let lastLMLocation = LMLocation(latitude: lastLocation.latitude, longitude: lastLocation.longitude)
-            let newLMLocation = LMLocation(latitude: newLocation.latitude, longitude: newLocation.longitude)
-            let distance = lastLMLocation.distance(from: newLMLocation)
-
-            if distance < Constants.MapDistance.max {
-                delegate?.addPolylineBetweenAnnotations(start: lastLocation, end: newLocation)
-            }
-        }
-        lastLocation = newLocation
     }
 }
 
@@ -118,7 +99,7 @@ private extension HomeViewModel {
 private extension HomeViewModel {
 
     func getAllLocations() -> [LocationModel] {
-        locationCoreDataManager.getAllLocationsEntity()
+        locationCoreDataManager.fetchAllLocations()
     }
     
     func insertLocation(_ location: LMLocation) {
@@ -130,13 +111,32 @@ private extension HomeViewModel {
     }
 }
 
+// MARK: Location Props
+private extension HomeViewModel {
+    
+    func loadSavedLocations() {
+        let allLocations = getAllLocations()
+        lastLocation = allLocations.last?.location.coordinate
+        let route = processRoutesUseCase.execute(locationModel: allLocations)
+        delegate?.loadSavedAnnotations(allLocations)
+        delegate?.drawRoutes(with: route)
+    }
+    
+    func addPolylineBetweenAnnotations(lastLocation: LMLocationCoordinate2D?, newLocation: LMLocationCoordinate2D) {
+        if let lastLocation = lastLocation, shouldDrawLineUseCase.execute(lastLocation: lastLocation, newLocation: newLocation) {
+            self.delegate?.addPolylineBetweenAnnotations(start: lastLocation, end: newLocation)
+        }
+        self.lastLocation = newLocation
+    }
+}
+
 // MARK: LMLocationManagerDelegate
 extension HomeViewModel {
     
     func locationManager(didUpdateLocation location: LMLocation) {
         delegate?.setTrackingButtonTitle(trackingButtonTitle)
         delegate?.updateMap(with: location)
-        addNewLocation(location.coordinate)
+        addPolylineBetweenAnnotations(lastLocation: self.lastLocation, newLocation: location.coordinate)
         insertLocation(location)
     }
 

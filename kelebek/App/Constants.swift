@@ -13,4 +13,8 @@ struct Constants {
         static let filter: Double = 100
         static let max: Double = 200
     }
+    
+    struct BackgroundTaskIdentifier {
+        static let locaiton: String = "com.onuryilmaz.kelebek.backgroundLocationTaskUpdate"
+    }
 }
