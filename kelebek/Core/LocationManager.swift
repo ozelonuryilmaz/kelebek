@@ -8,6 +8,7 @@
 import CoreLocation
 
 typealias LMLocation = CLLocation
+typealias LMLocationCoordinate2D = CLLocationCoordinate2D
 
 protocol LMLocationManagerDelegate: AnyObject {
     func locationManager(didUpdateLocation location: LMLocation)
@@ -27,7 +28,7 @@ final class LocationManager: NSObject, ILocationManager {
     weak var delegate: LMLocationManagerDelegate? = nil
     
     private let locationManager = CLLocationManager()
-    private let locationDistance = CLLocationDistance(100)
+    private let locationDistance = CLLocationDistance(Constants.MapDistance.filter)
 
     override init() {
         super.init()

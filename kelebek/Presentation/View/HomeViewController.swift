@@ -55,7 +55,7 @@ private extension HomeViewController {
 // MARK: Annotation
 private extension HomeViewController {
 
-    func addAnnotation(coordinate: CLLocationCoordinate2D) {
+    func addAnnotation(coordinate: LMLocationCoordinate2D) {
         DispatchQueue.main.async { [weak self] in
             let annotation = MKPointAnnotation()
             annotation.coordinate = coordinate
@@ -63,7 +63,7 @@ private extension HomeViewController {
         }
     }
     
-    func setRegion(coordinate: CLLocationCoordinate2D) {
+    func setRegion(coordinate: LMLocationCoordinate2D) {
         DispatchQueue.main.async { [weak self] in
             let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
             self?.mapView.setRegion(region, animated: true)
@@ -80,8 +80,12 @@ extension HomeViewController: HomeViewModelDelegate {
         setRegion(coordinate: coordinate)
     }
     
-    func removeAllAnnotations() {
-        mapView.removeAnnotations(mapView.annotations)
+    func clearMap() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.mapView.removeOverlays(self.mapView.overlays)
+            self.mapView.removeAnnotations(self.mapView.annotations)
+        }
     }
 
     func setTrackingButtonTitle(_ title: String) {
@@ -108,17 +112,47 @@ extension HomeViewController: HomeViewModelDelegate {
             let annotations = locations.map { model -> MKPointAnnotation in
                 let annotation = MKPointAnnotation()
                 let coordinate = model.location.coordinate
-                annotation.coordinate = CLLocationCoordinate2D(latitude: coordinate.latitude,
+                annotation.coordinate = LMLocationCoordinate2D(latitude: coordinate.latitude,
                                                                longitude: coordinate.longitude)
                 return annotation
             }
             self?.mapView.addAnnotations(annotations)
         }
     }
+    
+    func drawRoutes(with routes: [[LMLocationCoordinate2D]]) {
+        DispatchQueue.main.async { [weak self] in
+            for route in routes {
+                if route.count > 1 {
+                    let polyline = MKPolyline(coordinates: route, count: route.count)
+                    self?.mapView.addOverlay(polyline)
+                }
+            }
+        }
+    }
+
+    func addPolylineBetweenAnnotations(start: LMLocationCoordinate2D, end: LMLocationCoordinate2D) {
+        DispatchQueue.main.async { [weak self] in
+            let coordinates = [start, end]
+            let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+            self?.mapView.addOverlay(polyline)
+        }
+    }
 }
 
 // MARK: MKMapViewDelegate
 extension HomeViewController: MKMapViewDelegate {
+    
+    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+        if let polyline = overlay as? MKPolyline {
+            let renderer = MKPolylineRenderer(polyline: polyline)
+            renderer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.8)
+            renderer.lineWidth = 2
+            renderer.lineDashPattern = [2, 4]
+            return renderer
+        }
+        return MKOverlayRenderer()
+    }
 
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         guard let annotation = view.annotation else { return }
@@ -129,7 +163,7 @@ extension HomeViewController: MKMapViewDelegate {
 // MARK: Geocoder
 private extension HomeViewController {
     
-    func fetchAddress(for coordinate: CLLocationCoordinate2D) {
+    func fetchAddress(for coordinate: LMLocationCoordinate2D) {
         let geocoder = CLGeocoder()
         geocoder.reverseGeocodeLocation(
             LMLocation(latitude: coordinate.latitude,

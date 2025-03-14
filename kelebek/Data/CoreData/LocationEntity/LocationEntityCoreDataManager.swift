@@ -11,6 +11,7 @@ import CoreData
 protocol ILocationEntityCoreDataManager: AnyObject {
 
     func getAllLocationsEntity() -> [LocationModel]
+    func getAllRoutes() -> [[LMLocationCoordinate2D]]
     
     @discardableResult
     func insertLocationEntity(_ location: LMLocation) -> Bool
@@ -31,6 +32,48 @@ class LocationEntityCoreDataManager: BaseCoreDataManager<LocationEntity>, ILocat
             return []
         }
     }
+    
+    func getAllRoutes() -> [[LMLocationCoordinate2D]] {
+        let fetchRequest: NSFetchRequest<LocationEntity> = LocationEntity.fetchRequest()
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "date", ascending: true)]
+
+        do {
+            let locations = try managedContext.fetch(fetchRequest)
+            guard locations.count > 1 else { return [] }
+
+            var routes: [[LMLocationCoordinate2D]] = []
+            var currentRoute: [LMLocationCoordinate2D] = []
+            var previousLocation: LMLocation?
+
+            for location in locations {
+                let currentCoordinate = LMLocationCoordinate2D(latitude: location.lat, longitude: location.lon)
+                let currentLocation = LMLocation(latitude: location.lat, longitude: location.lon)
+
+                if let lastLocation = previousLocation {
+                    let distance = lastLocation.distance(from: currentLocation)
+                    if distance > Constants.MapDistance.max {
+                        if !currentRoute.isEmpty {
+                            routes.append(currentRoute)
+                        }
+                        currentRoute = []
+                    }
+                }
+
+                currentRoute.append(currentCoordinate)
+                previousLocation = currentLocation
+            }
+
+            if !currentRoute.isEmpty {
+                routes.append(currentRoute)
+            }
+
+            return routes
+        } catch {
+            print("Core Data Fetch Error: \(error)")
+            return []
+        }
+    }
+
 
     @discardableResult
     func insertLocationEntity(_ location: LMLocation) -> Bool {
