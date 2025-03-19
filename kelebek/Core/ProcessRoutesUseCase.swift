@@ -11,7 +11,7 @@ protocol IProcessRoutesUseCase {
     func execute(locationModel: [LocationModel]) -> [[LMLocationCoordinate2D]]
 }
 
-class ProcessRoutesUseCase: IProcessRoutesUseCase {
+final class ProcessRoutesUseCase: IProcessRoutesUseCase {
     
     func execute(locationModel: [LocationModel]) -> [[LMLocationCoordinate2D]] {
         let locations = locationModel.map({ $0.location.coordinate })

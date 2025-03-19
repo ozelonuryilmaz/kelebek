@@ -12,6 +12,7 @@ protocol HomeViewModelDelegate: AnyObject {
     func clearMap()
     func setTrackingButtonTitle(_ title: String)
     func showLocationPermissionAlert()
+    func didFetchAddress(_ result: Result<String, Error>)
     func loadSavedAnnotations(_ locations: [LocationModel])
     func drawRoutes(with routes: [[LMLocationCoordinate2D]])
     func addPolylineBetweenAnnotations(start: LMLocationCoordinate2D, end: LMLocationCoordinate2D)
@@ -21,6 +22,7 @@ protocol IHomeViewModel: LMLocationManagerDelegate {
     var delegate: HomeViewModelDelegate? { get set }
     
     func setupLocationManager()
+    func fetchAddress(for coordinate: LMLocationCoordinate2D)
 
     // Actions
     func onTrackingButtonTapped()
@@ -36,9 +38,11 @@ final class HomeViewModel: BaseViewModel, IHomeViewModel {
     private let locationCoreDataManager: ILocationEntityCoreDataManager
     private let processRoutesUseCase: IProcessRoutesUseCase
     private let shouldDrawLineUseCase: IShouldDrawLineUseCase
+    private let geocoderService: IGeocoderService
 
     // MARK: Definitions
     private var lastLocation: LMLocationCoordinate2D? = nil
+    private var task: Task<Void, Never>? = nil
     private var isTrackingActive: Bool = false
     private var trackingButtonTitle: String {
         return isTrackingActive ? "Konum Takibini Durdur" : "Konum Takibini Başlat"
@@ -47,11 +51,13 @@ final class HomeViewModel: BaseViewModel, IHomeViewModel {
     init(locationManager: ILocationManager,
          locationCoreDataManager: ILocationEntityCoreDataManager,
          processRoutesUseCase: IProcessRoutesUseCase,
-         shouldDrawLineUseCase: IShouldDrawLineUseCase) {
+         shouldDrawLineUseCase: IShouldDrawLineUseCase,
+         geocoderService: IGeocoderService) {
         self.locationManager = locationManager
         self.locationCoreDataManager = locationCoreDataManager
         self.processRoutesUseCase = processRoutesUseCase
         self.shouldDrawLineUseCase = shouldDrawLineUseCase
+        self.geocoderService = geocoderService
         super.init()
     }
     
@@ -144,4 +150,31 @@ extension HomeViewModel {
         if isGranted { self.startTracking() }
         else { delegate?.showLocationPermissionAlert() }
     }
+}
+
+// MARK: Fetch Address
+extension HomeViewModel {
+    
+    func fetchAddress(for coordinate: LMLocationCoordinate2D) {
+        task?.cancel()
+
+        task = Task(priority: .userInitiated) { [weak self] in
+            guard let self else { return }
+            do {
+                let address = try await self.geocoderService.fetchAddress(for: coordinate)
+                guard !Task.isCancelled else { return }
+
+                await MainActor.run {
+                    self.delegate?.didFetchAddress(.success(address))
+                }
+            } catch {
+                guard !Task.isCancelled else { return }
+                
+                await MainActor.run {
+                    self.delegate?.didFetchAddress(.failure(error))
+                }
+            }
+        }
+    }
+
 }

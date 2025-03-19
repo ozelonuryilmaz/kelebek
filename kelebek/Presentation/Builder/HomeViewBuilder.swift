@@ -19,11 +19,14 @@ enum HomeViewBuilder {
         
         let processRoutesUseCase: IProcessRoutesUseCase = ProcessRoutesUseCase()
         let shouldDrawLineUseCase: IShouldDrawLineUseCase = ShouldDrawLineUseCase()
+        
+        let geocoderService: IGeocoderService = GeocoderService()
 
         let viewModel: IHomeViewModel = HomeViewModel(locationManager: locationManager,
                                                       locationCoreDataManager: locationCoreDataManager,
                                                       processRoutesUseCase: processRoutesUseCase,
-                                                      shouldDrawLineUseCase: shouldDrawLineUseCase)
+                                                      shouldDrawLineUseCase: shouldDrawLineUseCase,
+                                                      geocoderService: geocoderService)
         
         let viewController = HomeViewController(viewModel: viewModel)
         

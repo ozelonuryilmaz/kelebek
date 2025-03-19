@@ -35,6 +35,7 @@ final class HomeViewController: KelebekBaseViewController {
     }
     
     override func registerEvents() {
+        // TODO: Kullanıcı konum takip izni UserDefaults'a tutulmalı. Uygulama açıldığında güncellenmeli
         trackingButton.addTarget(self, action: #selector(self.btnTrackingTapped), for: .touchUpInside)
         resetRouteButton.addTarget(self, action: #selector(self.btnResetRouteTapped), for: .touchUpInside)
     }
@@ -56,16 +57,18 @@ private extension HomeViewController {
 private extension HomeViewController {
 
     func addAnnotation(coordinate: LMLocationCoordinate2D) {
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = coordinate
+
         DispatchQueue.main.async { [weak self] in
-            let annotation = MKPointAnnotation()
-            annotation.coordinate = coordinate
             self?.mapView.addAnnotation(annotation)
         }
     }
     
     func setRegion(coordinate: LMLocationCoordinate2D) {
+        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
+
         DispatchQueue.main.async { [weak self] in
-            let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500)
             self?.mapView.setRegion(region, animated: true)
         }
     }
@@ -106,35 +109,48 @@ extension HomeViewController: HomeViewModelDelegate {
         )
     }
     
+    func didFetchAddress(_ result: Result<String, Error>) {
+        switch result {
+        case .success(let address):
+            showSystemAlert(title: "Adres Bilgisi", message: address)
+        case .failure(let error):
+            showSystemAlert(title: "Hata", message: "Adres alınamadı: \(error.localizedDescription)")
+        }
+    }
+    
     func loadSavedAnnotations(_ locations: [LocationModel]) {
+        // TODO: 500+ Annotions'da ClusterAnnotation düzenlenmesi gerekecek
+        let annotations = locations.map { model -> MKPointAnnotation in
+            let annotation = MKPointAnnotation()
+            let coordinate = model.location.coordinate
+            annotation.coordinate = LMLocationCoordinate2D(latitude: coordinate.latitude,
+                                                           longitude: coordinate.longitude)
+            return annotation
+        }
+
         DispatchQueue.main.async { [weak self] in
-            // TODO: 500+ Annotions'da ClusterAnnotation düzenlenmesi gerekecek
-            let annotations = locations.map { model -> MKPointAnnotation in
-                let annotation = MKPointAnnotation()
-                let coordinate = model.location.coordinate
-                annotation.coordinate = LMLocationCoordinate2D(latitude: coordinate.latitude,
-                                                               longitude: coordinate.longitude)
-                return annotation
-            }
             self?.mapView.addAnnotations(annotations)
         }
     }
     
     func drawRoutes(with routes: [[LMLocationCoordinate2D]]) {
+        let polylines = routes
+            .filter { $0.count > 1 }
+            .map { MKPolyline(coordinates: $0, count: $0.count) }
+
         DispatchQueue.main.async { [weak self] in
-            for route in routes {
-                if route.count > 1 {
-                    let polyline = MKPolyline(coordinates: route, count: route.count)
-                    self?.mapView.addOverlay(polyline)
-                }
+            polylines.forEach {
+                self?.mapView.addOverlay($0)
             }
         }
     }
 
     func addPolylineBetweenAnnotations(start: LMLocationCoordinate2D, end: LMLocationCoordinate2D) {
+        // TODO: Polyline yerine Direction tercih edilecek
+        let coordinates = [start, end]
+        let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+
         DispatchQueue.main.async { [weak self] in
-            let coordinates = [start, end]
-            let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
             self?.mapView.addOverlay(polyline)
         }
     }
@@ -156,20 +172,6 @@ extension HomeViewController: MKMapViewDelegate {
 
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         guard let annotation = view.annotation else { return }
-        fetchAddress(for: annotation.coordinate)
-    }
-}
-
-// MARK: Geocoder
-private extension HomeViewController {
-    
-    func fetchAddress(for coordinate: LMLocationCoordinate2D) {
-        let geocoder = CLGeocoder()
-        geocoder.reverseGeocodeLocation(
-            LMLocation(latitude: coordinate.latitude,
-                       longitude: coordinate.longitude)) { [weak self] placemarks, error in
-                           let address = placemarks?.first.map { "\($0.name ?? ""), \($0.locality ?? ""), \($0.administrativeArea ?? ""), \($0.country ?? "")" } ?? "Adres Bulunamadı"
-                           self?.showSystemAlert(title: "Adres Bilgisi", message: address)
-        }
+        viewModel.fetchAddress(for: annotation.coordinate)
     }
 }

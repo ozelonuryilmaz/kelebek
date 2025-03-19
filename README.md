@@ -8,9 +8,11 @@ Bu proje, **UIKit, MapKit, CoreLocation ve Core Data** kullanılarak geliştiril
 ## ✨ Özellikler
 
 - ✅ **100m hareketle konum güncelleme ve haritaya otomatik marker ekleme**
-- ✅ **Arka planda ve ön planda sürekli konum izleme**
-- ✅ **Haritadaki marker’lara tıklayarak adres bilgisini görüntüleme**
 - ✅ **Konum takibini başlatma/durdurma özelliği**
+- ✅ **100m aralıklı marker'lara rota oluşturma**
+- ✅ **Arka planda ve ön planda sürekli konum izleme**
+- ✅ **Uygulama kapansa bile konum izlemeye devam edebilme**
+- ✅ **Haritadaki marker’lara tıklayarak adres bilgisini görüntüleme**
 - ✅ **Rota sıfırlama ile tüm Marker'ları kaldırma**
 - ✅ **Core Data ile kalıcı veri saklama**
 - ✅ **UIKit + MVVM ile modüler yapı**

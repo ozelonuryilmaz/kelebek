@@ -9,7 +9,7 @@ protocol IShouldDrawLineUseCase {
     func execute(lastLocation: LMLocationCoordinate2D?, newLocation: LMLocationCoordinate2D) -> Bool
 }
 
-class ShouldDrawLineUseCase: IShouldDrawLineUseCase {
+final class ShouldDrawLineUseCase: IShouldDrawLineUseCase {
     
     func execute(lastLocation: LMLocationCoordinate2D?, newLocation: LMLocationCoordinate2D) -> Bool {
         guard let lastLocation = lastLocation else { return false }
